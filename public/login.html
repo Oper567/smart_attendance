@@ -10,17 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
     
     <style>
-        :root {
-            --bg-dark: #0f172a;
-        }
+        :root { --bg-dark: #0f172a; }
         body {
             font-family: "Plus Jakarta Sans", sans-serif;
             background: radial-gradient(circle at top right, #1e293b, var(--bg-dark));
-            /* Use dvh to account for mobile browser UI bars */
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         .glass-container {
             background: rgba(255, 255, 255, 0.03);
@@ -28,14 +26,9 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Native-like active state for buttons */
-        .btn-active:active {
-            transform: scale(0.97);
-            filter: brightness(0.9);
-        }
+        .btn-active:active { transform: scale(0.97); filter: brightness(0.9); }
         .loader {
-            width: 20px;
-            height: 20px;
+            width: 20px; height: 20px;
             border: 2.5px solid rgba(255,255,255,0.3);
             border-bottom-color: #fff;
             border-radius: 50%;
@@ -43,15 +36,8 @@
             animation: rotation 0.8s linear infinite;
         }
         @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
-        /* Smooth mobile transitions */
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Remove blue highlight on tap for mobile */
-        * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="text-white">
@@ -79,14 +65,13 @@
                         <div class="relative">
                             <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••"
                                 class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white pr-14 placeholder:text-slate-600" />
-                            
-                            <button type="button" onclick="togglePassword()" class="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-center text-slate-500 hover:text-blue-400 active:text-blue-300 transition-colors">
+                            <button type="button" onclick="togglePassword()" class="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-center text-slate-500">
                                 <i id="toggleIcon" data-lucide="eye" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4.5 rounded-2xl shadow-lg shadow-blue-600/20 transition-all flex justify-center items-center gap-3 text-base">
+                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4.5 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 text-base">
                         <span id="btnText">Sign In</span>
                     </button>
                 </form>
@@ -95,10 +80,7 @@
             </div>
 
             <div class="mt-10 text-center">
-                <p class="text-sm text-slate-400">
-                    Don't have an account? 
-                    <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300 transition-colors">Sign up</a>
-                </p>
+                <p class="text-sm text-slate-400">Don't have an account? <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300">Sign up</a></p>
             </div>
         </div>
     </main>
@@ -112,40 +94,50 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            checkInitialSession();
-        });
+        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
 
         function togglePassword() {
-            const passwordInput = document.getElementById("password");
-            const iconElement = document.getElementById("toggleIcon");
-            const isPassword = passwordInput.type === "password";
-            passwordInput.type = isPassword ? "text" : "password";
-            iconElement.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
+            const input = document.getElementById("password");
+            const icon = document.getElementById("toggleIcon");
+            input.type = input.type === "password" ? "text" : "password";
+            icon.setAttribute("data-lucide", input.type === "password" ? "eye" : "eye-off");
             lucide.createIcons();
         }
 
         async function validateAndRoute(user) {
             const errorEl = document.getElementById("errorMessage");
+            console.log("Auth successful. User UID:", user.id);
+
             try {
+                // Fetch Profile
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
-                    .select('role, is_approved')
+                    .select('*')
                     .eq('id', user.id)
                     .single();
 
-                if (profileError || !profile) throw new Error("Profile not detected. Please contact admin.");
-
-                if (profile.is_approved !== true) {
-                    await supabaseClient.auth.signOut();
-                    throw new Error("ACCESS PENDING\nYour account is currently awaiting administrative approval.");
+                if (profileError) {
+                    console.error("Profile Fetch Error:", profileError);
+                    throw new Error("Login successful, but PROFILE NOT FOUND in database. Ask Admin to add your UID to the profiles table.");
                 }
 
-                const role = profile.role.toUpperCase();
-                window.location.href = (role === 'LECTURER') ? 'lecturer.html' : 'student.html';
+                if (!profile.is_approved) {
+                    await supabaseClient.auth.signOut();
+                    throw new Error("ACCESS DENIED: Account awaiting admin approval.");
+                }
+
+                // Routing
+                const role = profile.role?.toUpperCase();
+                console.log("User Role identified as:", role);
+
+                if (role === 'LECTURER') {
+                    window.location.href = 'lecturer.html';
+                } else {
+                    window.location.href = 'student.html';
+                }
 
             } catch (err) {
+                console.error("Critical Error:", err.message);
                 errorEl.innerText = err.message;
                 errorEl.classList.remove("hidden");
                 resetButton();
@@ -157,11 +149,6 @@
             const btnText = document.getElementById("btnText");
             btn.disabled = false;
             btnText.innerText = "Sign In";
-        }
-
-        async function checkInitialSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) validateAndRoute(session.user);
         }
 
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -177,14 +164,14 @@
             const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value;
 
-            try {
-                const { data, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (authError) throw authError;
-                if (data.user) await validateAndRoute(data.user);
-            } catch (err) {
-                errorEl.innerText = err.message;
+            const { data, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (authError) {
+                errorEl.innerText = authError.message;
                 errorEl.classList.remove("hidden");
                 resetButton();
+            } else if (data.user) {
+                await validateAndRoute(data.user);
             }
         });
     </script>
