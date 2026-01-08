@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+]<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -25,6 +25,14 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Mobile optimization: Bigger tap targets */
+        .mobile-tap-area {
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-active:active { transform: scale(0.97); filter: brightness(0.9); }
         .loader {
@@ -64,11 +72,11 @@
                         <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">Password</label>
                         <div class="relative flex items-center">
                             <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••"
-                                class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white pr-12 placeholder:text-slate-600" />
+                                class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white pr-14 placeholder:text-slate-600" />
                             
                             <button type="button" onclick="togglePassword()" 
-                                class="absolute right-3 p-2 text-slate-500 hover:text-blue-400 focus:outline-none z-10 transition-colors">
-                                <i id="toggleIcon" data-lucide="eye" class="w-5 h-5"></i>
+                                class="absolute right-2 mobile-tap-area text-slate-400 hover:text-blue-400 active:text-blue-500 transition-colors z-20">
+                                <i id="toggleIcon" data-lucide="eye" class="w-6 h-6"></i>
                             </button>
                         </div>
                     </div>
@@ -104,7 +112,6 @@
             const isPassword = input.type === "password";
             
             input.type = isPassword ? "text" : "password";
-            // Replace icon using Lucide's attribute update
             icon.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
             lucide.createIcons();
         }
@@ -112,20 +119,29 @@
         async function validateAndRoute(user) {
             const errorEl = document.getElementById("errorMessage");
             try {
+                // Fetch profile to check role and approval status
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .single();
 
-                if (profileError) throw new Error("Profile not found. Ask Admin to verify your UID.");
-                if (!profile.is_approved) {
-                    await supabaseClient.auth.signOut();
-                    throw new Error("ACCESS DENIED: Account awaiting admin approval.");
+                if (profileError || !profile) {
+                    throw new Error("Profile not found. Please ensure you verified your email or contact Admin.");
                 }
 
+                if (!profile.is_approved) {
+                    await supabaseClient.auth.signOut();
+                    throw new Error("ACCESS DENIED: Your account is currently under review by Admin.");
+                }
+
+                // Route based on role
                 const role = profile.role?.toUpperCase();
-                window.location.href = (role === 'LECTURER') ? 'lecturer.html' : 'student.html';
+                if (role === 'LECTURER') {
+                    window.location.href = 'lecturer.html';
+                } else {
+                    window.location.href = 'student.html';
+                }
 
             } catch (err) {
                 errorEl.innerText = err.message;
