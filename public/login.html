@@ -1,4 +1,4 @@
-]<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -26,7 +26,6 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Mobile optimization: Bigger tap targets */
         .mobile-tap-area {
             min-height: 44px;
             min-width: 44px;
@@ -46,6 +45,7 @@
         @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input:-webkit-autofill { -webkit-text-fill-color: white !important; -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important; }
     </style>
 </head>
 <body class="text-white">
@@ -100,6 +100,7 @@
     </footer>
 
     <script>
+        // Use the verified working URL and Key
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -127,15 +128,15 @@
                     .single();
 
                 if (profileError || !profile) {
-                    throw new Error("Profile not found. Please ensure you verified your email or contact Admin.");
+                    throw new Error("Profile details not found. Please ensure you confirmed your email.");
                 }
 
                 if (!profile.is_approved) {
                     await supabaseClient.auth.signOut();
-                    throw new Error("ACCESS DENIED: Your account is currently under review by Admin.");
+                    throw new Error("ACCESS DENIED: Your account is awaiting administrator approval.");
                 }
 
-                // Route based on role
+                // Role-based routing
                 const role = profile.role?.toUpperCase();
                 if (role === 'LECTURER') {
                     window.location.href = 'lecturer.html';

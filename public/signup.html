@@ -9,24 +9,39 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at bottom left, #1e293b, #0f172a); color: white; }
+        :root { --bg-dark: #0f172a; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: radial-gradient(circle at bottom left, #1e293b, var(--bg-dark)); 
+            color: white; 
+            min-height: 100dvh;
+            -webkit-tap-highlight-color: transparent;
+        }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .strength-bar { height: 6px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        input::placeholder { color: #64748b; }
-        input:-webkit-autofill { -webkit-text-fill-color: white; -webkit-box-shadow: 0 0 0px 1000px #0f172a inset; }
+        
+        /* Mobile Touch Optimization */
+        .mobile-tap-area {
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        input:-webkit-autofill { -webkit-text-fill-color: white !important; -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<body class="flex items-center justify-center p-6">
 
     <div id="signupContainer" class="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 shadow-2xl fade-in">
         <header class="text-center mb-8">
-            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30 shadow-xl shadow-blue-500/10">
                 <span class="text-3xl font-black text-blue-500">U</span>
             </div>
             <h2 class="text-3xl font-black mb-1">Join Uni<span class="text-blue-500">Smart</span></h2>
-            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Identity Verification Required</p>
+            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold opacity-80">Identity Verification Required</p>
         </header>
         
         <form id="signupForm" class="space-y-4">
@@ -38,29 +53,29 @@
             <input type="hidden" id="role" value="STUDENT">
             
             <div class="space-y-3">
-                <input type="text" id="name" placeholder="Full Name" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                <input type="text" id="name" placeholder="Full Name" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-slate-600">
                 
-                <input type="email" id="email" placeholder="University Email" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                <input type="email" id="email" placeholder="University Email" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-slate-600">
                 
                 <div id="studentFields">
                     <div class="relative">
-                        <input type="text" id="matricNo" placeholder="Matric Number (e.g. 19/1234)" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12">
+                        <input type="text" id="matricNo" placeholder="Matric Number (e.g. 19/1234)" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12 placeholder:text-slate-600">
                         <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
                     </div>
                 </div>
 
                 <div id="lecturerFields" class="hidden">
                     <div class="relative">
-                        <input type="text" id="staffId" placeholder="Staff ID Number" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12">
+                        <input type="text" id="staffId" placeholder="Staff ID Number" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12 placeholder:text-slate-600">
                         <i data-lucide="badge-id" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
                     </div>
                 </div>
 
-                <div class="relative">
+                <div class="relative flex items-center">
                     <input type="password" id="password" placeholder="Create Password" required 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
-                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-                        <i id="toggleIcon1" data-lucide="eye" class="w-5 h-5"></i>
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-14 text-white placeholder:text-slate-600">
+                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-2 mobile-tap-area text-slate-500 hover:text-blue-400 transition-colors">
+                        <i id="toggleIcon1" data-lucide="eye" class="w-6 h-6"></i>
                     </button>
                 </div>
 
@@ -74,11 +89,11 @@
                     <p id="strengthText" class="text-[9px] uppercase font-black text-slate-600 tracking-[0.15em]">Security: Too Weak</p>
                 </div>
 
-                <div class="relative">
+                <div class="relative flex items-center">
                     <input type="password" id="confirmPassword" placeholder="Confirm Password" required 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
-                    <button type="button" onclick="togglePassword('confirmPassword', 'toggleIcon2')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-                        <i id="toggleIcon2" data-lucide="eye" class="w-5 h-5"></i>
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-14 text-white placeholder:text-slate-600">
+                    <button type="button" onclick="togglePassword('confirmPassword', 'toggleIcon2')" class="absolute right-2 mobile-tap-area text-slate-500 hover:text-blue-400 transition-colors">
+                        <i id="toggleIcon2" data-lucide="eye" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
@@ -93,12 +108,12 @@
         </p>
     </div>
 
-    <div id="successView" class="hidden text-center glass max-w-md p-10 rounded-[3rem] fade-in">
+    <div id="successView" class="hidden text-center glass max-w-md p-10 rounded-[3rem] fade-in mx-4">
         <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-12">
             <i data-lucide="mail" class="w-10 h-10 -rotate-12"></i>
         </div>
         <h2 class="text-2xl font-black mb-2">Check your email</h2>
-        <p class="text-slate-400 text-sm mb-8 leading-relaxed">Identity verification link sent. Once confirmed, your account will be reviewed for approval.</p>
+        <p class="text-slate-400 text-sm mb-8 leading-relaxed">A verification link has been sent. Once you verify your email, an administrator will review your account for portal access.</p>
         <button onclick="window.location.href='login.html'" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg">
             Back to Login
         </button>
@@ -106,7 +121,7 @@
 
     <script>
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Use your actual key
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         lucide.createIcons();
@@ -117,6 +132,7 @@
             document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
             document.getElementById('lecturerFields').classList.toggle('hidden', isStudent);
             
+            // Toggle active styles for role buttons
             document.getElementById('btnStudent').className = isStudent 
                 ? "py-3 rounded-xl border-2 border-blue-500 bg-blue-500/20 font-bold text-white transition-all" 
                 : "py-3 rounded-xl border-2 border-white/10 text-slate-400 font-bold transition-all";
@@ -129,8 +145,10 @@
         function togglePassword(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
-            input.type = input.type === 'password' ? 'text' : 'password';
-            icon.setAttribute('data-lucide', input.type === 'password' ? 'eye' : 'eye-off');
+            const isPassword = input.type === 'password';
+            
+            input.type = isPassword ? 'text' : 'password';
+            icon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
             lucide.createIcons();
         }
 
