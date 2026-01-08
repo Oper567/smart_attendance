@@ -63,7 +63,7 @@
             <div class="glass-container rounded-[2.5rem] p-7 sm:p-9 shadow-2xl">
                 <form id="loginForm" class="space-y-6">
                     <div>
-                        <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">University Email</label>
+                        <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">Email Address</label>
                         <input type="email" id="email" required autocomplete="email" placeholder="name@university.edu"
                             class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white placeholder:text-slate-600" />
                     </div>
@@ -81,7 +81,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 text-base">
+                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4.5 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 text-base">
                         <span id="btnText">Sign In</span>
                     </button>
                 </form>
@@ -90,7 +90,7 @@
             </div>
 
             <div class="mt-10 text-center">
-                <p class="text-sm text-slate-400">New member? <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300">Create account</a></p>
+                <p class="text-sm text-slate-400">Don't have an account? <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300">Sign up</a></p>
             </div>
         </div>
     </main>
@@ -100,7 +100,6 @@
     </footer>
 
     <script>
-        // Supabase Config
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -126,33 +125,34 @@
         async function validateAndRoute(user) {
             const errorEl = document.getElementById("errorMessage");
             try {
-                // Fetch profile to check role and approval status
+                // 1. Fetch user data from 'profiles' table
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
-                    .select('role, is_approved')
+                    .select('*')
                     .eq('id', user.id)
                     .single();
 
                 if (profileError || !profile) {
-                    throw new Error("User profile not found. Please contact support.");
+                    throw new Error("User record not found. Please contact administration.");
                 }
 
+                // 2. Check Approval status (Security Gate)
                 if (!profile.is_approved) {
                     await supabaseClient.auth.signOut();
-                    throw new Error("ACCESS DENIED: Account awaiting admin approval.");
+                    throw new Error("ACCESS DENIED: Your account is awaiting administrator approval.");
                 }
 
-                // MULTI-PAGE ROUTING LOGIC
+                // 3. Physical Redirection based on Role
                 const role = profile.role?.toUpperCase();
                 
-                if (role === 'LECTURER') {
+                if (role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                } else if (role === 'LECTURER') {
                     window.location.href = 'lecturer.html';
                 } else if (role === 'STUDENT') {
                     window.location.href = 'student.html';
-                } else if (role === 'ADMIN') {
-                    window.location.href = 'admin.html';
                 } else {
-                    throw new Error("Unauthorized role. Please contact system admin.");
+                    throw new Error("Unauthorized role. Please contact support.");
                 }
 
             } catch (err) {
@@ -175,6 +175,7 @@
             const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value;
 
+            // Supabase Auth call
             const { data, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
 
             if (authError) {
