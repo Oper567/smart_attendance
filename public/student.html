@@ -12,9 +12,9 @@
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.3s ease; }
         .glass-card:active { transform: scale(0.99); }
         .view-transition { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .otp-input { letter-spacing: 0.75rem; transition: all 0.3s ease; }
-        .otp-input:focus { letter-spacing: 1rem; box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .otp-input { letter-spacing: 0.5rem; transition: all 0.3s ease; }
+        .otp-input:focus { letter-spacing: 0.8rem; box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         #attendanceHistory::-webkit-scrollbar { width: 3px; }
         #attendanceHistory::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
@@ -24,97 +24,83 @@
 </head>
 <body class="p-4 md:p-8">
     
-    <header class="flex justify-between items-center mb-10 max-w-md mx-auto w-full">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
-                <span class="font-black text-xl text-white">U</span>
+    <header class="flex justify-between items-center mb-6 md:mb-10 max-w-md mx-auto w-full">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <span class="font-black text-lg text-white">U</span>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight">Uni<span class="text-blue-500">Smart</span></h1>
-                <p id="welcomeName" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Accessing Session...</p>
+                <h1 class="text-lg font-extrabold tracking-tight">Uni<span class="text-blue-500">Smart</span></h1>
+                <p id="welcomeName" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Verifying...</p>
             </div>
         </div>
-        <button onclick="logout()" class="p-2.5 rounded-xl bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 border border-white/5 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <button onclick="logout()" class="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-red-400 border border-white/5 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
     </header>
 
-    <main class="max-w-md mx-auto w-full space-y-6 view-transition">
-        <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden">
-            <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full"></div>
+    <main class="max-w-md mx-auto w-full space-y-4 md:space-y-6 view-transition pb-10">
+        <div class="glass-card p-5 md:p-8 rounded-[2rem] relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full"></div>
             
-            <div class="text-center mb-10">
-                <div class="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full mb-4 border border-blue-500/20">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full mb-3 border border-blue-500/20">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Geofence Active</span>
+                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Geofence: 500m</span>
                 </div>
-                <h2 class="text-2xl font-black text-white">Class Check-in</h2>
+                <h2 class="text-xl font-black text-white">Class Check-in</h2>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-[10px] uppercase font-black text-slate-500 mb-4 text-center tracking-[0.3em]">Lecture OTP</label>
+                    <label class="block text-[9px] uppercase font-black text-slate-500 mb-3 text-center tracking-widest">Enter 6-Digit OTP</label>
                     <input type="number" id="attendanceCode" 
                         oninput="if(this.value.length > 6) this.value = this.value.slice(0,6)" 
-                        placeholder="••••••"
-                        class="otp-input w-full bg-slate-900/60 border-2 border-white/5 rounded-3xl py-6 text-center text-4xl font-black text-blue-400 focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-800">
+                        placeholder="000000"
+                        class="otp-input w-full bg-slate-950/50 border border-white/10 rounded-2xl py-4 text-center text-3xl font-black text-blue-400 focus:outline-none focus:border-blue-500/50 transition-all">
                 </div>
 
                 <button onclick="submitAttendance()" id="submitBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-[2rem] shadow-2xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3">
-                    <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
                     Mark Attendance
                 </button>
             </div>
 
-            <div id="statusMsg" class="mt-6 text-center text-[11px] font-bold p-4 rounded-2xl hidden"></div>
+            <div id="statusMsg" class="mt-4 text-center text-[10px] font-bold p-3 rounded-xl hidden"></div>
         </div>
 
-        <div class="glass-card p-6 rounded-[2.5rem]">
-            <div class="flex justify-between items-center mb-6 px-2">
+        <div class="glass-card p-5 rounded-[2rem]">
+            <div class="flex justify-between items-center mb-4 px-1">
                 <div>
-                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Attendance Log</h3>
-                    <p class="text-[9px] text-slate-600 font-bold uppercase mt-1">Semester Cycle 2026</p>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-400">Your Logs</h3>
                 </div>
-                <span id="recordCount" class="text-[10px] font-black bg-blue-500/10 text-blue-500 px-3 py-1.5 rounded-xl border border-blue-500/10">0 Logs</span>
+                <span id="recordCount" class="text-[9px] font-black bg-blue-500/10 text-blue-500 px-2 py-1 rounded-lg border border-blue-500/10">0 Logs</span>
             </div>
             
-            <div id="attendanceHistory" class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                <div class="text-center py-12 opacity-30">
-                    <div class="w-10 h-10 border-2 border-t-blue-500 border-white/5 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p class="text-[10px] uppercase tracking-widest">Syncing Records...</p>
+            <div id="attendanceHistory" class="space-y-2 max-h-[220px] md:max-h-[350px] overflow-y-auto pr-1">
+                <div class="text-center py-8 opacity-30">
+                    <p class="text-[10px] uppercase tracking-widest">Loading History...</p>
                 </div>
             </div>
         </div>
     </main>
 
 <script>
-    // Configuration
     const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA'; // Ensure you replace this
-    
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA'; 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
 
     async function init() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        
-        // Safety Redirect: Ensure user is logged in AND is a Student
-        if (!user || user.user_metadata.role !== 'STUDENT') { 
-            window.location.href = 'login.html'; 
-            return; 
-        }
-        
+        if (!user) { window.location.href = 'login.html'; return; }
         currentUser = user;
         document.getElementById('welcomeName').innerText = `Hello, ${user.user_metadata.full_name || 'Student'}`;
         loadHistory();
     }
 
-    /**
-     * Haversine formula to calculate distance between coordinates
-     */
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth radius in meters
+        const R = 6371e3;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -128,14 +114,12 @@
         const btn = document.getElementById('submitBtn');
         const code = codeInput.value;
 
-        if (code.length !== 6) return showStatus("Enter the 6-digit code provided by your lecturer", "error");
+        if (code.length !== 6) return showStatus("Enter 6-digit code", "error");
 
         setLoading(true);
 
-        // High Accuracy Geolocation
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
-                // 1. Validate the Session exists and is active
                 const { data: session, error: sError } = await supabaseClient
                     .from('active_sessions')
                     .select('*')
@@ -143,9 +127,8 @@
                     .eq('is_active', true)
                     .maybeSingle();
 
-                if (sError || !session) throw new Error("Invalid or Expired Code");
+                if (sError || !session) throw new Error("Code invalid or session ended.");
 
-                // 2. Geofence Protection (Max 100 meters)
                 const distance = calculateDistance(
                     position.coords.latitude, 
                     position.coords.longitude, 
@@ -153,11 +136,11 @@
                     session.lng
                 );
 
+                // Updated radius check to 500m
                 if (distance > 500) {
-                    throw new Error(`Out of range. You are ${Math.round(distance)}m away. Move closer to the hall.`);
+                    throw new Error(`Out of range (${Math.round(distance)}m). Move closer.`);
                 }
 
-                // 3. Log Attendance
                 const { error: aError } = await supabaseClient.from('attendance_logs').insert([{
                     student_name: currentUser.user_metadata.full_name,
                     matric_no: currentUser.user_metadata.matric_no,
@@ -167,29 +150,20 @@
                 }]);
 
                 if (aError) {
-                    if (aError.code === '23505') throw new Error("Attendance already recorded for this class.");
+                    if (aError.code === '23505') throw new Error("Already signed in for this class.");
                     throw aError;
                 }
 
-                // Success Feedback
-                showStatus(`Checked in successfully: ${session.course_code}`, "success");
-                btn.innerHTML = "Success!";
-                btn.className = "w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl";
+                showStatus(`Success: ${session.course_code}`, "success");
                 codeInput.value = '';
-                
-                setTimeout(() => {
-                    setLoading(false);
-                    btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-[2rem] shadow-2xl transition-all";
-                }, 3000);
-                
                 loadHistory();
-
             } catch (err) {
                 showStatus(err.message, "error");
+            } finally {
                 setLoading(false);
             }
         }, (geoErr) => {
-            showStatus("GPS Access Denied. Ensure Location Services are ON.", "error");
+            showStatus("Enable GPS to mark attendance", "error");
             setLoading(false);
         }, { enableHighAccuracy: true, timeout: 10000 });
     }
@@ -206,37 +180,30 @@
         document.getElementById('recordCount').innerText = `${data.length} Logs`;
 
         if (data.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 opacity-20 text-[10px] uppercase font-black tracking-widest">No history found</div>`;
+            container.innerHTML = `<p class="text-center py-10 opacity-20 text-[10px] font-black">NO RECORDS</p>`;
             return;
         }
 
         container.innerHTML = data.map(rec => `
-            <div class="flex justify-between items-center bg-white/[0.02] p-5 rounded-3xl border border-white/5 animate-[slideUp_0.4s_ease-out]">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400 font-black text-xs">
+            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-black text-[10px]">
                         ${rec.course_code.substring(0,3)}
                     </div>
                     <div>
-                        <p class="font-black text-sm text-white">${rec.course_code}</p>
-                        <p class="text-[9px] text-slate-500 font-bold uppercase mt-0.5">
-                            ${new Date(rec.signed_at).toLocaleDateString(undefined, {month:'short', day:'numeric'})} • ${new Date(rec.signed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </p>
+                        <p class="font-black text-xs">${rec.course_code}</p>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase mt-0.5">${new Date(rec.signed_at).toLocaleDateString()}</p>
                     </div>
                 </div>
-                <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-500/10 uppercase tracking-tighter">Verified</span>
+                <span class="text-[7px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full uppercase tracking-tighter">Verified</span>
             </div>
         `).join('');
     }
 
     function setLoading(isLoading) {
         const btn = document.getElementById('submitBtn');
-        if (isLoading) {
-            btn.disabled = true;
-            btn.innerHTML = `<span class="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></span> Checking...`;
-        } else {
-            btn.disabled = false;
-            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Mark Attendance`;
-        }
+        btn.disabled = isLoading;
+        btn.innerHTML = isLoading ? "Verifying..." : "Mark Attendance";
     }
 
     function showStatus(text, type) {
@@ -244,14 +211,10 @@
         msg.innerText = text;
         msg.classList.remove('hidden', 'status-success', 'status-error');
         msg.classList.add(type === 'success' ? 'status-success' : 'status-error');
-        if(type === 'error') setTimeout(() => msg.classList.add('hidden'), 6000);
+        setTimeout(() => msg.classList.add('hidden'), 5000);
     }
 
-    async function logout() { 
-        await supabaseClient.auth.signOut(); 
-        window.location.href = 'login.html'; 
-    }
-
+    async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
     init();
 </script>
 </body>
