@@ -138,7 +138,7 @@
     // --- AUTHENTICATION ---
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
+        const email = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value;
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
