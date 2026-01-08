@@ -217,15 +217,20 @@
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
                 const duration = parseInt(durationInput.value);
 
-                const { data, error } = await supabaseClient.from('active_sessions').insert([{
-                    course_code: courseValue,
-                    otp: otp,
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    lecturer_name: currentUser.user_metadata.full_name,
-                    duration_mins: duration,
-                    is_active: true
-                }]).select().single();
+                const { data, error } = await supabaseClient
+    .from('active_sessions')
+    .insert([{
+        // REMOVE 'id' FROM HERE ENTIRELY
+        course_code: courseValue, 
+        otp: generatedOtp,
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        is_active: true,
+        radius: 100,
+        lecturer_name: currentUser.user_metadata.full_name // Added for safety
+    }])
+    .select()
+    .single();
 
                 if (error) alert(error.message);
                 else resumeSession(data);
