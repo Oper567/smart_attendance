@@ -57,13 +57,13 @@
                     <span class="text-3xl font-black text-blue-500">U</span>
                 </div>
                 <h1 class="text-3xl font-extrabold tracking-tight">Uni<span class="text-blue-500">Smart</span></h1>
-                <p class="text-slate-400 text-[10px] mt-1.5 uppercase tracking-[0.2em] font-bold opacity-80">Secure Student Portal</p>
+                <p class="text-slate-400 text-[10px] mt-1.5 uppercase tracking-[0.2em] font-bold opacity-80">Secure University Ecosystem</p>
             </div>
 
             <div class="glass-container rounded-[2.5rem] p-7 sm:p-9 shadow-2xl">
                 <form id="loginForm" class="space-y-6">
                     <div>
-                        <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">Email Address</label>
+                        <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">University Email</label>
                         <input type="email" id="email" required autocomplete="email" placeholder="name@university.edu"
                             class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white placeholder:text-slate-600" />
                     </div>
@@ -81,7 +81,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4.5 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 text-base">
+                    <button type="submit" id="loginBtn" class="btn-active w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 text-base">
                         <span id="btnText">Sign In</span>
                     </button>
                 </form>
@@ -90,7 +90,7 @@
             </div>
 
             <div class="mt-10 text-center">
-                <p class="text-sm text-slate-400">Don't have an account? <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300">Sign up</a></p>
+                <p class="text-sm text-slate-400">New member? <a href="signup.html" class="text-blue-400 font-bold hover:text-blue-300">Create account</a></p>
             </div>
         </div>
     </main>
@@ -100,7 +100,7 @@
     </footer>
 
     <script>
-        // Use the verified working URL and Key
+        // Supabase Config
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -111,10 +111,16 @@
             const input = document.getElementById("password");
             const icon = document.getElementById("toggleIcon");
             const isPassword = input.type === "password";
-            
             input.type = isPassword ? "text" : "password";
             icon.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
             lucide.createIcons();
+        }
+
+        function resetButton() {
+            const btn = document.getElementById("loginBtn");
+            const btnText = document.getElementById("btnText");
+            btn.disabled = false;
+            btnText.innerText = "Sign In";
         }
 
         async function validateAndRoute(user) {
@@ -123,25 +129,30 @@
                 // Fetch profile to check role and approval status
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
-                    .select('*')
+                    .select('role, is_approved')
                     .eq('id', user.id)
                     .single();
 
                 if (profileError || !profile) {
-                    throw new Error("Profile details not found. Please ensure you confirmed your email.");
+                    throw new Error("User profile not found. Please contact support.");
                 }
 
                 if (!profile.is_approved) {
                     await supabaseClient.auth.signOut();
-                    throw new Error("ACCESS DENIED: Your account is awaiting administrator approval.");
+                    throw new Error("ACCESS DENIED: Account awaiting admin approval.");
                 }
 
-                // Role-based routing
+                // MULTI-PAGE ROUTING LOGIC
                 const role = profile.role?.toUpperCase();
+                
                 if (role === 'LECTURER') {
                     window.location.href = 'lecturer.html';
-                } else {
+                } else if (role === 'STUDENT') {
                     window.location.href = 'student.html';
+                } else if (role === 'ADMIN') {
+                    window.location.href = 'admin.html';
+                } else {
+                    throw new Error("Unauthorized role. Please contact system admin.");
                 }
 
             } catch (err) {
@@ -149,13 +160,6 @@
                 errorEl.classList.remove("hidden");
                 resetButton();
             }
-        }
-
-        function resetButton() {
-            const btn = document.getElementById("loginBtn");
-            const btnText = document.getElementById("btnText");
-            btn.disabled = false;
-            btnText.innerText = "Sign In";
         }
 
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -174,7 +178,7 @@
             const { data, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
 
             if (authError) {
-                errorEl.innerText = authError.message;
+                errorEl.innerText = "Invalid credentials. Please try again.";
                 errorEl.classList.remove("hidden");
                 resetButton();
             } else if (data.user) {
