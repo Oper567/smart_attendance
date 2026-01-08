@@ -17,6 +17,7 @@
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
         #studentList::-webkit-scrollbar { width: 5px; }
         #studentList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -113,7 +114,7 @@
                     
                     <div class="max-w-md mx-auto">
                         <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
-                            <div id="progress" class="bg-gradient-to-right from-blue-600 to-blue-400 h-full w-0 rounded-full transition-all duration-1000"></div>
+                            <div id="progress" class="bg-gradient-to-r from-blue-600 to-blue-400 h-full w-0 rounded-full transition-all duration-1000"></div>
                         </div>
                     </div>
                 </div>
@@ -144,31 +145,58 @@
     </main>
 
     <script>
-        // Use environment variables or secure config for production
+        // Supabase Configuration
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-        const SB_KEY = 'YOUR_KEY'; // Replace with key
+        const SB_KEY = 'YOUR_SUPABASE_ANON_KEY'; 
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         let currentUser = null;
         let activeCourseCode = null;
         let countdown = null;
         let currentSessionId = null;
+        let presentStudents = [];
 
+        // 1. Initial Setup
         async function setup() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'login.html'; return; }
+            
             currentUser = user;
             document.getElementById('lecturerDisplayName').innerText = `Certified: ${user.user_metadata.full_name || 'Academic Staff'}`;
+            
+            // Try to recover session on refresh
             checkActiveSession();
         }
 
+        // 2. Session Persistence Logic
         async function checkActiveSession() {
-            // Logic to recover session on page refresh
-            const { data } = await supabaseClient.from('active_sessions')
-                .select('*').eq('is_active', true).maybeSingle();
-            if (data) resumeSession(data);
+            const { data } = await supabaseClient
+                .from('active_sessions')
+                .select('*')
+                .eq('is_active', true)
+                .eq('lecturer_name', currentUser.user_metadata.full_name)
+                .maybeSingle();
+
+            if (data) {
+                resumeSession(data);
+            }
         }
 
+        function resumeSession(session) {
+            currentSessionId = session.id;
+            activeCourseCode = session.course_code;
+            
+            document.getElementById('codeOverlay').classList.add('hidden');
+            document.getElementById('activeCode').innerText = session.otp;
+            document.getElementById('geoStatus').innerText = `Locked within 50m of ${session.lat.toFixed(4)}`;
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-border";
+            document.getElementById('sessionTimeInfo').innerText = `Active Session: ${session.course_code}`;
+            
+            initRealtimeSubscription();
+            fetchExistingLogs();
+        }
+
+        // 3. Start New Session
         async function startSession() {
             const courseInput = document.getElementById('courseCode');
             const course = courseInput.value.trim().toUpperCase();
@@ -176,7 +204,7 @@
             const btn = document.getElementById('genBtn');
 
             if(!course) {
-                courseInput.classList.add('border-red-500/50');
+                courseInput.classList.add('ring-2', 'ring-red-500');
                 return;
             }
 
@@ -186,9 +214,8 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude: lat, longitude: lng, accuracy } = pos.coords;
                 
-                // Security check: High accuracy required
-                if (accuracy > 100) {
-                    alert("GPS signal too weak for secure geofencing. Please move near a window.");
+                if (accuracy > 150) {
+                    alert("GPS signal too weak. Please move to an open area.");
                     resetBtn(btn);
                     return;
                 }
@@ -201,8 +228,7 @@
                     lecturer_name: currentUser.user_metadata.full_name,
                     lat: lat,
                     lng: lng,
-                    is_active: true,
-                    created_at: new Date().toISOString()
+                    is_active: true
                 }]).select();
 
                 if (error) {
@@ -211,32 +237,33 @@
                     return;
                 }
 
-                activeCourseCode = course;
-                currentSessionId = data[0].id;
-                
-                // UI Transformation
-                document.getElementById('codeOverlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('codeOverlay').classList.add('hidden'), 500);
-                
-                document.getElementById('activeCode').innerText = otp;
-                document.getElementById('geoStatus').innerText = `Locked within 50m of ${lat.toFixed(4)}`;
-                document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-border";
-                document.getElementById('studentList').innerHTML = ""; 
-                document.getElementById('sessionTimeInfo').innerText = `Started at ${new Date().toLocaleTimeString()}`;
-                
+                resumeSession(data[0]);
                 runTimer(durationMins * 60);
-                initRealtimeSubscription();
                 resetBtn(btn);
 
             }, (err) => {
-                alert("Location Access Required for Security.");
+                alert("Location Access Denied. Check browser permissions.");
                 resetBtn(btn);
             }, { enableHighAccuracy: true });
         }
 
         function resetBtn(btn) {
             btn.disabled = false;
-            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>ACTIVATE BROADCAST</span>`;
+            btn.innerHTML = `<svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>ACTIVATE BROADCAST</span>`;
+        }
+
+        // 4. Realtime Manifest Updates
+        async function fetchExistingLogs() {
+            const { data } = await supabaseClient
+                .from('attendance_logs')
+                .select('*')
+                .eq('course_code', activeCourseCode)
+                .order('created_at', { ascending: false });
+            
+            if (data) {
+                document.getElementById('studentList').innerHTML = "";
+                data.forEach(log => renderStudentRow(log));
+            }
         }
 
         function initRealtimeSubscription() {
@@ -257,6 +284,10 @@
             const emptyMsg = document.getElementById('emptyMsg');
             if(emptyMsg) emptyMsg.remove();
 
+            // Prevent duplicates in the UI list
+            if (presentStudents.some(s => s.matric_no === log.matric_no)) return;
+            presentStudents.push(log);
+
             const card = `
                 <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 animate-[fadeIn_0.5s_ease-out]">
                     <div class="flex items-center gap-3">
@@ -275,9 +306,10 @@
                 </div>
             `;
             container.insertAdjacentHTML('afterbegin', card);
-            document.getElementById('studentCount').innerText = `${container.querySelectorAll('.bg-white\\/\\[0\\.02\\]').length} PRESENT`;
+            document.getElementById('studentCount').innerText = `${presentStudents.length} PRESENT`;
         }
 
+        // 5. Timer & Export
         function runTimer(totalSeconds) {
             if(countdown) clearInterval(countdown);
             let remaining = totalSeconds;
@@ -307,6 +339,25 @@
             document.getElementById('codeOverlay').style.opacity = '1';
             document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
             document.getElementById('activeCode').innerText = "000000";
+        }
+
+        function downloadCourseReport() {
+            if (presentStudents.length === 0) { alert("No data to export"); return; }
+            
+            let csv = "Name,Matric Number,Course,Timestamp\n";
+            presentStudents.forEach(s => {
+                csv += `${s.student_name},${s.matric_no},${s.course_code},${s.created_at}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Attendance_${activeCourseCode}_${new Date().toLocaleDateString()}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function playHaptic() { if (window.navigator.vibrate) window.navigator.vibrate(10); }

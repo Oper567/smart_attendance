@@ -18,6 +18,8 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         #attendanceHistory::-webkit-scrollbar { width: 3px; }
         #attendanceHistory::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        .status-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -60,12 +62,12 @@
 
                 <button onclick="submitAttendance()" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-[2rem] shadow-2xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3">
-                    <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5"/></svg>
+                    <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Mark Attendance
                 </button>
             </div>
 
-            <div id="statusMsg" class="mt-6 text-center text-[11px] font-bold p-4 rounded-2xl hidden animate-pulse"></div>
+            <div id="statusMsg" class="mt-6 text-center text-[11px] font-bold p-4 rounded-2xl hidden"></div>
         </div>
 
         <div class="glass-card p-6 rounded-[2.5rem]">
@@ -87,8 +89,9 @@
     </main>
 
 <script>
+    // Configuration - Replace 'YOUR_KEY' with your actual Supabase Anon Key
     const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-    const SB_KEY = 'YOUR_KEY'; // Replace with key
+    const SB_KEY = 'YOUR_KEY'; 
     
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
@@ -102,9 +105,11 @@
         loadHistory();
     }
 
-    // Modern Geofencing check
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Meters
+    /**
+     * Haversine formula to calculate distance between two coordinates in meters
+     */
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Earth radius in meters
         const φ1 = lat1 * Math.PI/180;
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
@@ -124,12 +129,11 @@
 
         if (code.length !== 6) return showStatus("Enter the 6-digit code provided by your lecturer", "error");
 
-        btn.disabled = true;
-        btn.innerHTML = `<span class="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></span> Verifying Location...`;
+        setLoading(true);
 
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
-                // 1. Validate Session
+                // 1. Validate the Session exists and is active
                 const { data: session, error: sError } = await supabaseClient
                     .from('active_sessions')
                     .select('*')
@@ -139,11 +143,19 @@
 
                 if (sError || !session) throw new Error("Invalid or Expired Code");
 
-                // 2. Geofence Protection (100m strict for 2026)
-                const dist = getDistance(position.coords.latitude, position.coords.longitude, session.lat, session.lng);
-                if (dist > 100) throw new Error(`Out of range. Move closer to the lecture hall (${Math.round(dist)}m away).`);
+                // 2. Geofence Protection (Max 100 meters)
+                const distance = calculateDistance(
+                    position.coords.latitude, 
+                    position.coords.longitude, 
+                    session.lat, 
+                    session.lng
+                );
 
-                // 3. Log Attendance
+                if (distance > 100) {
+                    throw new Error(`Out of range. You are ${Math.round(distance)}m away. Move closer to the hall.`);
+                }
+
+                // 3. Log Attendance with session link
                 const { error: aError } = await supabaseClient.from('attendance_logs').insert([{
                     student_name: currentUser.user_metadata.full_name,
                     matric_no: currentUser.user_metadata.matric_no,
@@ -153,33 +165,32 @@
                 }]);
 
                 if (aError) {
-                    if (aError.code === '23505') throw new Error("Attendance already recorded for this session.");
+                    // Handle unique constraint (already marked)
+                    if (aError.code === '23505') throw new Error("Attendance already recorded for this class.");
                     throw aError;
                 }
 
-                showStatus(`Successfully marked present for ${session.course_code}`, "success");
-                btn.innerHTML = "Attendance Confirmed!";
+                // Success Handling
+                showStatus(`Checked in successfully: ${session.course_code}`, "success");
+                btn.innerHTML = "Success!";
                 btn.className = "w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl";
                 codeInput.value = '';
                 
                 setTimeout(() => {
-                   btn.disabled = false;
-                   btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5"/></svg> Mark Attendance`;
-                   btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-[2rem] shadow-2xl transition-all";
-                }, 4000);
+                    setLoading(false);
+                    btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-[2rem] shadow-2xl transition-all";
+                }, 3000);
                 
                 loadHistory();
 
             } catch (err) {
                 showStatus(err.message, "error");
-                btn.disabled = false;
-                btn.innerHTML = `Retry Verification`;
+                setLoading(false);
             }
-        }, () => {
-            showStatus("GPS Access Denied. Check your browser permissions.", "error");
-            btn.disabled = false;
-            btn.innerHTML = `Retry Verification`;
-        }, { enableHighAccuracy: true, timeout: 10000 });
+        }, (geoErr) => {
+            showStatus("GPS Access Denied. Ensure Location Services are ON.", "error");
+            setLoading(false);
+        }, { enableHighAccuracy: true, timeout: 8000 });
     }
 
     async function loadHistory() {
@@ -193,36 +204,47 @@
         if (error) return;
         document.getElementById('recordCount').innerText = `${data.length} Logs`;
 
-        container.innerHTML = data.length === 0 ? 
-            '<div class="text-center py-10 opacity-20 text-[10px] uppercase font-black tracking-widest">No history available</div>' :
-            data.map(rec => `
-                <div class="flex justify-between items-center bg-white/[0.02] p-5 rounded-3xl border border-white/5 animate-[slideUp_0.4s_ease-out]">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400 font-black text-xs">
-                            ${rec.course_code.substring(0,3)}
-                        </div>
-                        <div>
-                            <p class="font-black text-sm text-white">${rec.course_code}</p>
-                            <p class="text-[9px] text-slate-500 font-bold uppercase mt-0.5">
-                                ${new Date(rec.signed_at).toLocaleDateString(undefined, {month:'short', day:'numeric'})} • ${new Date(rec.signed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            </p>
-                        </div>
+        if (data.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 opacity-20 text-[10px] uppercase font-black tracking-widest">No history found</div>`;
+            return;
+        }
+
+        container.innerHTML = data.map(rec => `
+            <div class="flex justify-between items-center bg-white/[0.02] p-5 rounded-3xl border border-white/5 animate-[slideUp_0.4s_ease-out]">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400 font-black text-xs">
+                        ${rec.course_code.substring(0,3)}
                     </div>
-                    <div class="text-right">
-                        <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-500/10 uppercase">Verified</span>
+                    <div>
+                        <p class="font-black text-sm text-white">${rec.course_code}</p>
+                        <p class="text-[9px] text-slate-500 font-bold uppercase mt-0.5">
+                            ${new Date(rec.signed_at).toLocaleDateString(undefined, {month:'short', day:'numeric'})} • ${new Date(rec.signed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </p>
                     </div>
                 </div>
-            `).join('');
+                <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-500/10 uppercase tracking-tighter">Verified</span>
+            </div>
+        `).join('');
+    }
+
+    function setLoading(isLoading) {
+        const btn = document.getElementById('submitBtn');
+        if (isLoading) {
+            btn.disabled = true;
+            btn.innerHTML = `<span class="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></span> Checking...`;
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Mark Attendance`;
+        }
     }
 
     function showStatus(text, type) {
         const msg = document.getElementById('statusMsg');
         msg.innerText = text;
-        msg.classList.remove('hidden');
-        msg.className = `mt-6 text-center text-[10px] font-black uppercase tracking-wider p-4 rounded-2xl border ${
-            type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-        }`;
-        if(type === 'error') setTimeout(() => msg.classList.add('hidden'), 5000);
+        msg.classList.remove('hidden', 'status-success', 'status-error');
+        msg.classList.add(type === 'success' ? 'status-success' : 'status-error');
+        
+        if(type === 'error') setTimeout(() => msg.classList.add('hidden'), 6000);
     }
 
     async function logout() { 
