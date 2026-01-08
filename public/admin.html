@@ -3,121 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel | UniSmart</title>
+    <title>Admin Command | UniSmart</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top right, #1e293b, #0f172a); min-height: 100vh; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .admin-gradient { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        :root { --admin-blue: #3b82f6; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; min-height: 100vh; color: white; overflow-x: hidden; }
+        .bg-mesh { background: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%), radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.2) 0, transparent 50%); }
+        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: rgba(59, 130, 246, 0.4); background: rgba(255, 255, 255, 0.04); }
+        .admin-gradient { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .status-pulse { animation: pulse-small 2s infinite; }
+        @keyframes pulse-small { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
-<body class="text-white p-6 md:p-12">
+<body class="bg-mesh p-4 md:p-10">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-12">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-end mb-12">
             <div>
-                <h1 class="text-3xl font-black tracking-tighter italic">Uni<span class="text-blue-500">Smart</span></h1>
-                <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold">System Administrator Console</p>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden md:block">
-                    <p class="text-xs font-bold">Super Admin</p>
-                    <p class="text-[9px] text-green-500 font-bold uppercase tracking-widest">System Online</p>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 admin-gradient rounded-lg flex items-center justify-center font-bold">A</div>
+                    <h1 class="text-2xl font-black tracking-tight">Uni<span class="text-blue-500">Smart</span> <span class="text-slate-600 ml-2 font-normal">Console</span></h1>
                 </div>
-                <button onclick="logout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-3 rounded-2xl border border-red-500/20 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-                    </svg>
+                <div class="flex items-center gap-4">
+                    <p class="text-[9px] uppercase tracking-[0.4em] text-slate-500 font-bold">Node: Lagos_Main_Alpha</p>
+                    <span class="w-1 h-1 rounded-full bg-slate-700"></span>
+                    <p id="serverTime" class="text-[9px] text-slate-500 font-mono">2026-01-08 03:41</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
+                <div class="pl-4 pr-2">
+                    <p id="adminName" class="text-[10px] font-black uppercase text-right leading-none">Super Admin</p>
+                    <p class="text-[8px] text-blue-400 text-right uppercase tracking-widest mt-1">Level 4 Clearance</p>
+                </div>
+                <button onclick="logout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-3 rounded-xl transition-all border border-red-500/10 active:scale-90">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 16l4-4m0 0l-4-4m4 4H7" stroke-width="2.5"/></svg>
                 </button>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="glass-card p-6 rounded-[2rem] relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 admin-gradient opacity-10 rounded-full"></div>
-                <p class="text-[10px] uppercase font-black text-slate-500 mb-2">Verified Lecturers</p>
-                <h3 id="statLec" class="text-3xl font-black">0</h3>
+        
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass-card p-6 rounded-3xl group">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-width="2"/></svg></div>
+                    <span class="text-[8px] font-black text-blue-500 bg-blue-500/10 px-2 py-1 rounded-md">VERIFIED STAFF</span>
+                </div>
+                <h3 id="statLec" class="text-4xl font-black mb-1">0</h3>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Global Lecturers</p>
             </div>
-            <div class="glass-card p-6 rounded-[2rem]">
-                <p class="text-[10px] uppercase font-black text-slate-500 mb-2">Total Attendance Logs</p>
-                <h3 id="statStu" class="text-3xl font-black">0</h3>
+
+            <div class="glass-card p-6 rounded-3xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg></div>
+                    <span class="text-[8px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md">LOG ENTRIES</span>
+                </div>
+                <h3 id="statStu" class="text-4xl font-black mb-1">0</h3>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Attendance Records</p>
             </div>
-            <div class="glass-card p-6 rounded-[2rem] border-blue-500/30">
-                <p class="text-[10px] uppercase font-black text-blue-500 mb-2">Active Live Sessions</p>
-                <h3 id="statSess" class="text-3xl font-black text-blue-400">0</h3>
+
+            <div class="glass-card p-6 rounded-3xl border-blue-500/20 shadow-2xl shadow-blue-500/5">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400 status-pulse"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg></div>
+                    <span class="text-[8px] font-black text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md tracking-tighter">LIVE BROADCASTS</span>
+                </div>
+                <h3 id="statSess" class="text-4xl font-black mb-1 text-blue-400">0</h3>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Classes</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-3xl">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-orange-500/10 rounded-lg text-orange-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-width="2"/></svg></div>
+                    <span class="text-[8px] font-black text-orange-500 bg-orange-500/10 px-2 py-1 rounded-md">PENDING APPROVAL</span>
+                </div>
+                <h3 id="statPending" class="text-4xl font-black mb-1">0</h3>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Verification Queue</p>
             </div>
         </div>
 
-        <div class="glass-card p-8 rounded-[3rem] shadow-2xl">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-black flex items-center gap-3">
-                    <span class="w-2 h-6 admin-gradient rounded-full"></span>
-                    Lecturer Verification Queue
-                </h2>
-                <button onclick="loadLecturers()" class="text-xs font-bold text-slate-400 hover:text-white transition">Refresh List</button>
+        <div class="glass-card p-8 rounded-[3rem] shadow-2xl overflow-hidden relative">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                <div>
+                    <h2 class="text-xl font-black tracking-tight mb-1">Staff Verification Management</h2>
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Pending Faculty Handshakes</p>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative w-full md:w-72">
+                        <input type="text" id="staffSearch" oninput="filterStaff()" placeholder="Search Name or Staff ID..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-xs focus:outline-none focus:border-blue-500/50 transition-all">
+                    </div>
+                    <button onclick="loadLecturers()" class="bg-white/5 hover:bg-white/10 p-3 rounded-2xl border border-white/5 transition-all active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2.5"/></svg>
+                    </button>
+                </div>
             </div>
 
-            <div id="lecturerList" class="grid grid-cols-1 gap-4">
-                <div class="animate-pulse bg-white/5 h-20 rounded-2xl"></div>
+            <div id="lecturerList" class="space-y-3 min-h-[400px]">
+                <div class="animate-pulse flex flex-col gap-3">
+                    <div class="bg-white/5 h-24 rounded-[2rem]"></div>
+                    <div class="bg-white/5 h-24 rounded-[2rem]"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
+        const SB_KEY = 'YOUR_SUPABASE_KEY'; 
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+        let allLecturers = [];
+
+        async function init() {
+            // Check session
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            
+            // Check if user has admin meta
+            if (user.user_metadata.role !== 'admin') {
+                document.body.innerHTML = "<div class='h-screen flex items-center justify-center text-red-400 font-black'>ACCESS DENIED: LEVEL 4 REQUIRED</div>";
+                return;
+            }
+
+            loadLecturers();
+            loadStats();
+            
+            // Start clock
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('serverTime').innerText = now.toISOString().replace('T', ' ').slice(0, 16);
+            }, 1000);
+        }
+
         async function loadStats() {
-            // Fetch live counts from Supabase
             const { count: lecCount } = await supabaseClient.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'lecturer').eq('is_approved', true);
             const { count: attCount } = await supabaseClient.from('attendance_logs').select('*', { count: 'exact', head: true });
             const { count: sessCount } = await supabaseClient.from('active_sessions').select('*', { count: 'exact', head: true }).eq('is_active', true);
+            const { count: pendCount } = await supabaseClient.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'lecturer').eq('is_approved', false);
 
             document.getElementById('statLec').innerText = lecCount || 0;
             document.getElementById('statStu').innerText = attCount || 0;
             document.getElementById('statSess').innerText = sessCount || 0;
+            document.getElementById('statPending').innerText = pendCount || 0;
         }
 
         async function loadLecturers() {
             const list = document.getElementById('lecturerList');
-            
-            // Get all lecturers (pending ones first)
             const { data, error } = await supabaseClient
                 .from('profiles')
                 .select('*')
                 .eq('role', 'lecturer')
                 .order('is_approved', { ascending: true });
 
-            if (error) {
-                list.innerHTML = `<p class="text-center text-red-400 py-10">Error fetching data.</p>`;
-                return;
-            }
+            if (error) return;
+            allLecturers = data;
+            renderList(data);
+        }
 
+        function renderList(data) {
+            const list = document.getElementById('lecturerList');
             if (data.length === 0) {
-                list.innerHTML = `<div class="text-center py-12 opacity-30 uppercase text-xs tracking-[0.3em]">No Lecturers Found</div>`;
+                list.innerHTML = `<div class="text-center py-20 opacity-20 uppercase text-[10px] font-black tracking-widest">No active staff records found</div>`;
                 return;
             }
 
             list.innerHTML = data.map(lec => `
-                <div class="flex flex-col md:flex-row justify-between items-center bg-white/[0.02] p-6 rounded-[2rem] border border-white/5 hover:border-white/10 transition-all group">
-                    <div class="flex items-center gap-5 mb-4 md:mb-0">
-                        <div class="w-12 h-12 rounded-2xl admin-gradient flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/20">
-                            ${lec.full_name.charAt(0)}
+                <div class="flex flex-col md:flex-row justify-between items-center bg-white/[0.02] p-6 rounded-[2rem] border border-white/5 hover:bg-white/[0.04] transition-all group">
+                    <div class="flex items-center gap-6 mb-4 md:mb-0">
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-2xl admin-gradient flex items-center justify-center font-black text-2xl shadow-2xl shadow-blue-500/20">
+                                ${lec.full_name.charAt(0)}
+                            </div>
+                            ${!lec.is_approved ? '<div class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 border-4 border-slate-950 rounded-full"></div>' : ''}
                         </div>
                         <div>
-                            <p class="font-black text-lg group-hover:text-blue-400 transition-colors">${lec.full_name}</p>
-                            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Staff ID: ${lec.matric_no || 'N/A'}</p>
+                            <p class="font-black text-lg leading-none mb-1">${lec.full_name}</p>
+                            <div class="flex items-center gap-3">
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">ID: ${lec.matric_no || 'NOT_SET'}</p>
+                                <span class="w-1 h-1 rounded-full bg-slate-800"></span>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">${lec.email || ''}</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         ${lec.is_approved ? 
-                            `<span class="bg-green-500/10 text-green-400 px-5 py-2 rounded-xl text-[10px] font-black uppercase border border-green-500/20">Verified Account</span>` : 
-                            `<button onclick="approve('${lec.id}')" class="admin-gradient hover:scale-105 active:scale-95 px-8 py-3 rounded-2xl text-xs font-black shadow-xl shadow-blue-500/20 transition-all">
-                                Verify Lecturer
+                            `<div class="flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-5 py-2.5 rounded-xl border border-emerald-500/20">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Authorized</span>
+                            </div>` : 
+                            `<button onclick="approve('${lec.id}')" class="admin-gradient hover:scale-105 active:scale-95 px-8 py-3 rounded-2xl text-[10px] font-black shadow-xl shadow-blue-500/20 transition-all uppercase tracking-widest">
+                                Approve Staff
                             </button>`
                         }
                     </div>
@@ -125,15 +205,19 @@
             `).join('');
         }
 
+        function filterStaff() {
+            const query = document.getElementById('staffSearch').value.toLowerCase();
+            const filtered = allLecturers.filter(l => 
+                l.full_name.toLowerCase().includes(query) || 
+                (l.matric_no && l.matric_no.toLowerCase().includes(query))
+            );
+            renderList(filtered);
+        }
+
         async function approve(userId) {
-            const { error } = await supabaseClient
-                .from('profiles')
-                .update({ is_approved: true })
-                .eq('id', userId);
-            
-            if (error) {
-                alert("Approval failed: " + error.message);
-            } else {
+            const { error } = await supabaseClient.from('profiles').update({ is_approved: true }).eq('id', userId);
+            if (!error) {
+                // Optimistic refresh
                 loadLecturers();
                 loadStats();
             }
@@ -144,9 +228,7 @@
             window.location.href = 'login.html';
         }
 
-        // Initialize
-        loadLecturers();
-        loadStats();
+        init();
     </script>
 </body>
 </html>

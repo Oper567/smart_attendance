@@ -3,123 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Hub | UniSmart</title>
+    <title>Lecturer Hub Pro | UniSmart</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top right, #1e293b, #0f172a); min-height: 100vh; color: white; }
-        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .code-display { letter-spacing: 0.75rem; background: linear-gradient(to right, #60a5fa, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)); }
-        #studentList::-webkit-scrollbar { width: 4px; }
+        :root { --accent: #3b82f6; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top right, #1e293b, #020617); min-height: 100vh; color: white; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(255, 255, 255, 0.05); }
+        .code-display { letter-spacing: 0.5rem; background: linear-gradient(135deg, #fff 30%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .pulse-border { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        #studentList::-webkit-scrollbar { width: 5px; }
         #studentList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .fade-in-row { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <header class="max-w-6xl mx-auto flex justify-between items-center mb-10">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
-                <span class="font-black text-xl">U</span>
+    <header class="max-w-6xl mx-auto flex justify-between items-center mb-12">
+        <div class="flex items-center gap-4 group">
+            <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:rotate-6 transition-transform">
+                <span class="font-black text-2xl">U</span>
             </div>
             <div>
-                <h1 class="text-xl font-black">Lecturer<span class="text-blue-500">Hub</span></h1>
-                <p id="lecturerDisplayName" class="text-[10px] text-slate-500 uppercase tracking-widest font-bold italic">Authenticating...</p>
+                <h1 class="text-2xl font-black tracking-tight">Lecturer<span class="text-blue-500">Hub</span> <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-md ml-2">PRO</span></h1>
+                <p id="lecturerDisplayName" class="text-xs text-slate-400 font-medium">Initialising Secure Environment...</p>
             </div>
         </div>
-        <button onclick="logout()" class="group flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl border border-red-500/20 transition-all">
-            <span class="text-xs font-bold">Logout</span>
-        </button>
+        <div class="flex items-center gap-3">
+            <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-[10px] font-bold text-emerald-500 uppercase">Live</span>
+            </div>
+            <button onclick="logout()" class="p-3 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all border border-white/5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+        </div>
     </header>
 
     <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div class="lg:col-span-5 space-y-6">
-            <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl border-white/5">
-                <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
-                    <span class="w-2 h-6 bg-blue-500 rounded-full"></span>
-                    Start Session
+        <div class="lg:col-span-4 space-y-6">
+            <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16"></div>
+                <h3 class="text-sm font-black mb-8 flex items-center gap-3 text-slate-400 uppercase tracking-widest">
+                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
+                    Session Config
                 </h3>
                 
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Course Code</label>
-                        <input type="text" id="courseCode" placeholder="CSC 401" class="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 transition-all font-semibold uppercase">
+                <div class="space-y-6">
+                    <div class="group">
+                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest group-focus-within:text-blue-500 transition-colors">Course Identifier</label>
+                        <input type="text" id="courseCode" placeholder="CSC 401" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold uppercase placeholder:opacity-20 text-lg">
                     </div>
                     <div>
-                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Duration</label>
-                        <select id="duration" class="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-slate-300 appearance-none">
-                            <option value="5">5 Minutes</option>
-                            <option value="15">15 Minutes</option>
-                            <option value="30">30 Minutes</option>
-                            <option value="60">60 Minutes</option>
-                        </select>
+                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Broadcast Window</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="duration" class="col-span-2 bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-slate-200 appearance-none font-bold">
+                                <option value="5">05 Minutes</option>
+                                <option value="15" selected>15 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="60">60 Minutes</option>
+                            </select>
+                        </div>
                     </div>
-                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95">
-                        Broadcast Code
+                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                        <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>ACTIVATE BROADCAST</span>
                     </button>
                 </div>
             </div>
 
-            <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between border-white/5">
-                <div>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Location Status</p>
-                    <p id="geoStatus" class="text-sm font-semibold text-slate-300 italic">GPS Required for broadcast</p>
+            <div class="glass-card p-6 rounded-3xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Geofence Radius</p>
+                        <p id="geoStatus" class="text-xs font-bold text-slate-300">Awaiting Signal...</p>
+                    </div>
                 </div>
-                <div id="statusDot" class="w-3 h-3 rounded-full bg-slate-700"></div>
+                <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
             </div>
         </div>
 
-        <div class="lg:col-span-7 space-y-6">
-            <div class="glass-card p-8 rounded-[3rem] text-center border-blue-500/20 relative overflow-hidden">
-                <div id="codeOverlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-10 flex items-center justify-center transition-all duration-500">
-                    <p class="text-xs uppercase tracking-[0.3em] font-bold opacity-40">Session Inactive</p>
+        <div class="lg:col-span-8 space-y-6">
+            <div class="glass-card p-10 rounded-[3rem] text-center relative overflow-hidden">
+                <div id="codeOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl z-20 flex flex-col items-center justify-center transition-all duration-700">
+                    <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Secure Channel Offline</p>
                 </div>
 
-                <div class="relative z-0">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20">Active OTP</span>
-                        <span id="timer" class="text-sm font-black font-mono text-blue-400">00:00</span>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-center mb-10">
+                        <div class="flex flex-col items-start">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Dynamic OTP</span>
+                            <div class="h-1 w-8 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <div class="text-right">
+                            <span id="timer" class="text-3xl font-black font-mono text-white tabular-nums">00:00</span>
+                            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Time Remaining</p>
+                        </div>
                     </div>
-                    <h2 id="activeCode" class="text-7xl md:text-8xl font-black code-display my-4">000000</h2>
-                    <div class="w-full bg-white/5 h-1.5 rounded-full mt-8 overflow-hidden">
-                        <div id="progress" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
+
+                    <h2 id="activeCode" class="text-8xl md:text-9xl font-black code-display my-8 drop-shadow-2xl">000000</h2>
+                    
+                    <div class="max-w-md mx-auto">
+                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
+                            <div id="progress" class="bg-gradient-to-right from-blue-600 to-blue-400 h-full w-0 rounded-full transition-all duration-1000"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="glass-card p-6 rounded-[2.5rem] border-white/5">
-                <div class="flex justify-between items-center mb-6 px-2">
-                    <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-400">Present Students</h3>
-                    <div class="flex items-center gap-2">
-                        <button onclick="downloadCourseReport()" class="text-[10px] bg-white/5 hover:bg-white/10 text-slate-400 px-3 py-1.5 rounded-xl border border-white/10 font-bold transition-all flex items-center gap-1.5">
-                            EXPORT CSV
+            <div class="glass-card p-8 rounded-[2.5rem]">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Live Manifest</h3>
+                        <p class="text-[10px] text-slate-600 font-bold" id="sessionTimeInfo">No active session</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="downloadCourseReport()" class="text-[10px] bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-2 rounded-xl border border-white/10 font-black transition-all">
+                            EXPORT DATA
                         </button>
-                        <span id="studentCount" class="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg border border-blue-500/20 font-bold">0 Present</span>
+                        <div id="studentCount" class="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] font-black shadow-lg shadow-blue-500/20">0 PRESENT</div>
                     </div>
                 </div>
-                <div id="studentList" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    <div id="emptyMsg" class="text-center py-10 opacity-20"><p class="text-xs uppercase tracking-widest">Waiting for entries...</p></div>
+
+                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 content-start">
+                    <div id="emptyMsg" class="col-span-full py-20 flex flex-col items-center opacity-30">
+                        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <p class="text-[10px] uppercase tracking-widest font-black">Waiting for encrypted handshakes...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
+        // Use environment variables or secure config for production
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
+        const SB_KEY = 'YOUR_KEY'; // Replace with key
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         let currentUser = null;
         let activeCourseCode = null;
         let countdown = null;
+        let currentSessionId = null;
 
         async function setup() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'login.html'; return; }
             currentUser = user;
-            document.getElementById('lecturerDisplayName').innerText = `${user.user_metadata.full_name || 'Lecturer'}`;
+            document.getElementById('lecturerDisplayName').innerText = `Certified: ${user.user_metadata.full_name || 'Academic Staff'}`;
+            checkActiveSession();
+        }
+
+        async function checkActiveSession() {
+            // Logic to recover session on page refresh
+            const { data } = await supabaseClient.from('active_sessions')
+                .select('*').eq('is_active', true).maybeSingle();
+            if (data) resumeSession(data);
         }
 
         async function startSession() {
@@ -128,57 +175,72 @@
             const durationMins = parseInt(document.getElementById('duration').value);
             const btn = document.getElementById('genBtn');
 
-            if(!course) return alert("Please enter a course code!");
+            if(!course) {
+                courseInput.classList.add('border-red-500/50');
+                return;
+            }
 
             btn.disabled = true;
-            btn.innerText = "Capturing GPS...";
+            btn.innerHTML = `<span class="animate-spin text-xl">◌</span> SECURING GPS...`;
 
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+                
+                // Security check: High accuracy required
+                if (accuracy > 100) {
+                    alert("GPS signal too weak for secure geofencing. Please move near a window.");
+                    resetBtn(btn);
+                    return;
+                }
+
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-                const { data, error } = await supabaseClient
-                    .from('active_sessions')
-                    .insert([{
-                        course_code: course,
-                        otp: otp,
-                        lecturer_name: currentUser.user_metadata.full_name,
-                        lat: lat,
-                        lng: lng,
-                        is_active: true
-                    }]);
+                const { data, error } = await supabaseClient.from('active_sessions').insert([{
+                    course_code: course,
+                    otp: otp,
+                    lecturer_name: currentUser.user_metadata.full_name,
+                    lat: lat,
+                    lng: lng,
+                    is_active: true,
+                    created_at: new Date().toISOString()
+                }]).select();
 
                 if (error) {
-                    alert("Error: " + error.message);
-                    btn.disabled = false;
-                    btn.innerText = "Broadcast Code";
+                    alert(error.message);
+                    resetBtn(btn);
                     return;
                 }
 
                 activeCourseCode = course;
-                btn.disabled = false;
-                btn.innerText = "Broadcast Code";
-                document.getElementById('codeOverlay').classList.add('hidden');
+                currentSessionId = data[0].id;
+                
+                // UI Transformation
+                document.getElementById('codeOverlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('codeOverlay').classList.add('hidden'), 500);
+                
                 document.getElementById('activeCode').innerText = otp;
-                document.getElementById('geoStatus').innerText = `Locked: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
+                document.getElementById('geoStatus').innerText = `Locked within 50m of ${lat.toFixed(4)}`;
+                document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-border";
                 document.getElementById('studentList').innerHTML = ""; 
+                document.getElementById('sessionTimeInfo').innerText = `Started at ${new Date().toLocaleTimeString()}`;
                 
                 runTimer(durationMins * 60);
                 initRealtimeSubscription();
+                resetBtn(btn);
 
-            }, (geoError) => {
-                alert("GPS error. Location access is required to set the geofence.");
-                btn.disabled = false;
-                btn.innerText = "Broadcast Code";
+            }, (err) => {
+                alert("Location Access Required for Security.");
+                resetBtn(btn);
             }, { enableHighAccuracy: true });
         }
 
-        // REAL-TIME: Listen for students marking attendance
+        function resetBtn(btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>ACTIVATE BROADCAST</span>`;
+        }
+
         function initRealtimeSubscription() {
-            supabaseClient
-                .channel('attendance_live')
+            supabaseClient.channel('attendance_live')
                 .on('postgres_changes', { 
                     event: 'INSERT', 
                     schema: 'public', 
@@ -186,8 +248,8 @@
                     filter: `course_code=eq.${activeCourseCode}`
                 }, (payload) => {
                     renderStudentRow(payload.new);
-                })
-                .subscribe();
+                    playHaptic();
+                }).subscribe();
         }
 
         function renderStudentRow(log) {
@@ -195,45 +257,25 @@
             const emptyMsg = document.getElementById('emptyMsg');
             if(emptyMsg) emptyMsg.remove();
 
-            const row = `
-                <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5 fade-in-row">
+            const card = `
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 animate-[fadeIn_0.5s_ease-out]">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-[10px] font-bold text-blue-400 uppercase">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-black text-xs">
                             ${log.student_name.charAt(0)}
                         </div>
                         <div>
-                            <p class="text-xs font-bold">${log.student_name}</p>
-                            <p class="text-[9px] text-slate-500 uppercase tracking-tighter">${log.matric_no}</p>
+                            <p class="text-[11px] font-black">${log.student_name}</p>
+                            <p class="text-[9px] text-slate-500 font-mono">${log.matric_no}</p>
                         </div>
                     </div>
-                    <span class="text-[8px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-md">VERIFIED</span>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">VERIFIED</span>
+                        <span class="text-[7px] text-slate-600 mt-1 uppercase">${new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
                 </div>
             `;
-            container.insertAdjacentHTML('afterbegin', row);
-            document.getElementById('studentCount').innerText = `${container.children.length} Present`;
-        }
-
-        async function downloadCourseReport() {
-            if (!activeCourseCode) return alert("No active session found.");
-
-            const { data: logs, error } = await supabaseClient
-                .from('attendance_logs')
-                .select('student_name, matric_no, created_at')
-                .eq('course_code', activeCourseCode);
-
-            if (error || !logs.length) return alert("No records to export.");
-
-            let csv = "Student Name,Matric Number,Time\n";
-            logs.forEach(log => {
-                csv += `${log.student_name},'${log.matric_no},${new Date(log.created_at).toLocaleTimeString()}\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `${activeCourseCode}_Attendance.csv`);
-            a.click();
+            container.insertAdjacentHTML('afterbegin', card);
+            document.getElementById('studentCount').innerText = `${container.querySelectorAll('.bg-white\\/\\[0\\.02\\]').length} PRESENT`;
         }
 
         function runTimer(totalSeconds) {
@@ -245,7 +287,7 @@
             countdown = setInterval(() => {
                 const mins = Math.floor(remaining / 60);
                 const secs = remaining % 60;
-                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                timerText.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                 progress.style.width = `${(remaining / totalSeconds) * 100}%`;
 
                 if (remaining <= 0) { 
@@ -259,12 +301,15 @@
         async function finishSession() {
             await supabaseClient.from('active_sessions')
                 .update({ is_active: false })
-                .eq('course_code', activeCourseCode)
-                .eq('is_active', true);
+                .eq('id', currentSessionId);
 
             document.getElementById('codeOverlay').classList.remove('hidden');
-            document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500";
+            document.getElementById('codeOverlay').style.opacity = '1';
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
+            document.getElementById('activeCode').innerText = "000000";
         }
+
+        function playHaptic() { if (window.navigator.vibrate) window.navigator.vibrate(10); }
 
         async function logout() { 
             await supabaseClient.auth.signOut(); 
