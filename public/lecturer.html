@@ -55,7 +55,7 @@
                 <div class="space-y-6">
                     <div class="group">
                         <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest group-focus-within:text-blue-500 transition-colors">Course Identifier</label>
-                        <input type="text" id="courseCode" placeholder="CSC 401" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold uppercase placeholder:opacity-20 text-lg">
+                        <input type="text" id="courseCode" placeholder="Enter Course (e.g. SWE201)" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold uppercase placeholder:opacity-20 text-lg">
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Broadcast Window</label>
@@ -197,41 +197,44 @@
         }
 
         // 3. Start New Session
-    async function startSession() {
-    // 1. Get the input value
-    const courseInput = document.getElementById('courseCode'); // Make sure this ID matches your HTML
-    const courseValue = courseInput.value.trim();
-
-    // 2. Validation Guard
-    if (!courseValue) {
-        alert("Please enter a Course Code before starting.");
+     async function startSession() {
+    // 1. Correctly grab the value from the input field
+    const courseInput = document.getElementById('courseCode'); 
+    
+    // Check if the element actually exists in your HTML
+    if (!courseInput) {
+        console.error("Error: HTML input with id 'courseCode' not found!");
         return;
     }
 
-    // 3. Get Location
+    const courseValue = courseInput.value.trim();
+
+    // 2. Validate before sending to Supabase
+    if (!courseValue) {
+        alert("You must enter a course code (e.g., SWE201) first.");
+        return;
+    }
+
     navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
         const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // 4. The Insert Call
-        // IMPORTANT: Ensure the keys on the left match your Supabase column names exactly
+        // 3. The Database Call
         const { data, error } = await supabaseClient
             .from('active_sessions')
             .insert([{
-                course_code: courseValue, // This must match the DB column name
+                course_code: courseValue, // THIS IS THE CRITICAL LINE
                 otp: generatedOtp,
-                lat: latitude,
-                lng: longitude,
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
                 is_active: true,
-                radius: 100 // Default radius in meters
+                radius: 100
             }]);
 
         if (error) {
-            console.error("Database Error:", error.message);
-            alert("Error: " + error.message);
+            console.error("Full Error Object:", error);
+            alert("DB Error: " + error.message);
         } else {
-            alert("Session Started for " + courseValue);
-            // Update UI to show the OTP to students
+            alert("Broadcast Started for " + courseValue);
         }
     });
 }
