@@ -1,0 +1,53 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  LECTURER
+  STUDENT
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  matricNo    String?  @unique // For students
+  staffId     String?  @unique // For lecturers
+  email       String   @unique
+  password    String   // Hashed (Bcrypt)
+  pin         String?  // Hashed 4-digit PIN for students
+  name        String
+  role        Role     @default(STUDENT)
+  isApproved  Boolean  @default(false) // For lecturer approval
+  createdAt   DateTime @default(now())
+  attendance  Attendance[]
+  sessions    Session[] // Sessions created by lecturer
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  courseCode   String
+  lecturerId   Int
+  lecturer     User     @relation(fields: [lecturerId], references: [id])
+  code         String   // The 2-3 min dynamic code
+  expiresAt    DateTime
+  isActive     Boolean  @default(true)
+  records      Attendance[]
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  sessionId Int
+  studentId Int
+  session   Session  @relation(fields: [sessionId], references: [id])
+  student   User     @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, studentId]) // Prevents double attendance
+}

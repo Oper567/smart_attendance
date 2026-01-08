@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Create Account | UniSmart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at bottom left, #1e293b, #0f172a); color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .strength-bar { height: 6px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input::placeholder { color: #64748b; }
+        input:-webkit-autofill { -webkit-text-fill-color: white; -webkit-box-shadow: 0 0 0px 1000px #0f172a inset; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div id="signupContainer" class="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 shadow-2xl fade-in">
+        <header class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                <span class="text-3xl font-black text-blue-500">U</span>
+            </div>
+            <h2 class="text-3xl font-black mb-1">Join Uni<span class="text-blue-500">Smart</span></h2>
+            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Create your secure profile</p>
+        </header>
+        
+        <form id="signupForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button type="button" onclick="setRole('STUDENT')" id="btnStudent" class="py-3 rounded-xl border-2 border-blue-500 bg-blue-500/20 font-bold transition-all text-white">Student</button>
+                <button type="button" onclick="setRole('LECTURER')" id="btnLecturer" class="py-3 rounded-xl border-2 border-white/10 text-slate-400 font-bold hover:border-blue-500/50 transition-all">Lecturer</button>
+            </div>
+
+            <input type="hidden" id="role" value="STUDENT">
+            
+            <div class="space-y-3">
+                <input type="text" id="name" placeholder="Full Name" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                
+                <input type="email" id="email" placeholder="University Email" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                
+                <div id="studentFields">
+                    <input type="text" id="matricNo" placeholder="Matric Number (e.g. 19/1234)" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                </div>
+
+                <div id="lecturerFields" class="hidden">
+                    <input type="text" id="staffId" placeholder="Staff ID Number" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                </div>
+
+                <div class="relative">
+                    <input type="password" id="password" placeholder="Create Password" required 
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
+                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        <i id="toggleIcon1" data-lucide="eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="px-1">
+                    <div class="flex gap-1.5 mb-1.5">
+                        <div id="bar1" class="strength-bar w-1/4 bg-white/5"></div>
+                        <div id="bar2" class="strength-bar w-1/4 bg-white/5"></div>
+                        <div id="bar3" class="strength-bar w-1/4 bg-white/5"></div>
+                        <div id="bar4" class="strength-bar w-1/4 bg-white/5"></div>
+                    </div>
+                    <p id="strengthText" class="text-[9px] uppercase font-black text-slate-600 tracking-[0.15em]">Security: Too Weak</p>
+                </div>
+
+                <div class="relative">
+                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required 
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
+                    <button type="button" onclick="togglePassword('confirmPassword', 'toggleIcon2')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        <i id="toggleIcon2" data-lucide="eye" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2">
+                Create Account
+            </button>
+        </form>
+
+        <p class="text-center mt-8 text-slate-400 text-sm">
+            Already have an account? <a href="login.html" class="text-blue-500 font-bold hover:underline">Log in</a>
+        </p>
+    </div>
+
+    <div id="successView" class="hidden text-center glass max-w-md p-10 rounded-[3rem] fade-in">
+        <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-12">
+            <i data-lucide="mail" class="w-10 h-10 -rotate-12"></i>
+        </div>
+        <h2 class="text-2xl font-black mb-2">Check your email</h2>
+        <p class="text-slate-400 text-sm mb-8 leading-relaxed">We've sent a verification link. Once confirmed, you can log in to your dashboard.</p>
+        <button onclick="window.location.href='login.html'" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg">
+            Back to Login
+        </button>
+    </div>
+
+    <script>
+        const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        lucide.createIcons();
+
+        function setRole(role) {
+            document.getElementById('role').value = role;
+            const isStudent = role === 'STUDENT';
+            document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
+            document.getElementById('lecturerFields').classList.toggle('hidden', isStudent);
+            
+            document.getElementById('btnStudent').className = isStudent 
+                ? "py-3 rounded-xl border-2 border-blue-500 bg-blue-500/20 font-bold text-white transition-all" 
+                : "py-3 rounded-xl border-2 border-white/10 text-slate-400 font-bold transition-all";
+            
+            document.getElementById('btnLecturer').className = !isStudent 
+                ? "py-3 rounded-xl border-2 border-blue-500 bg-blue-500/20 font-bold text-white transition-all" 
+                : "py-3 rounded-xl border-2 border-white/10 text-slate-400 font-bold transition-all";
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+            icon.setAttribute('data-lucide', input.type === 'password' ? 'eye' : 'eye-off');
+            lucide.createIcons();
+        }
+
+        const passInput = document.getElementById('password');
+        passInput.addEventListener('input', () => {
+            const val = passInput.value;
+            let score = 0;
+            if (val.length >= 8) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+            
+            const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+            const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+            bars.forEach((bar, i) => bar.className = `strength-bar w-1/4 ${i < score ? colors[score-1] : 'bg-white/5'}`);
+            
+            const labels = ["Too Weak", "Weak", "Fairly Strong", "Strong", "Excellent"];
+            document.getElementById('strengthText').innerText = `Security: ${labels[score]}`;
+        });
+
+        document.getElementById('signupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const email = document.getElementById('email').value.trim();
+            const password = passInput.value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                return alert("Passwords do not match!");
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>`;
+
+            const role = document.getElementById('role').value;
+            const fullName = document.getElementById('name').value.trim();
+            const matricNo = document.getElementById('matricNo').value.trim();
+            const staffId = document.getElementById('staffId').value.trim();
+
+            // Prepare Clean Metadata Object
+            const metadata = {
+                full_name: fullName,
+                role: role,
+                // We send both keys to satisfy the SQL trigger, but only one will have a value
+                matric_no: role === 'STUDENT' ? matricNo : null,
+                staff_id: role === 'LECTURER' ? staffId : null
+            };
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: { 
+                    data: metadata,
+                    // Use standard origin for email redirect
+                    emailRedirectTo: window.location.origin + '/login.html'
+                }
+            });
+
+            if (error) {
+                alert("Error: " + error.message);
+                btn.disabled = false;
+                btn.innerText = 'Create Account';
+            } else {
+                document.getElementById('signupContainer').classList.add('hidden');
+                document.getElementById('successView').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

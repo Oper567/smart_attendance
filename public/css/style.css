@@ -1,0 +1,57 @@
+/* public/css/style.css */
+:root {
+    --glass: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --blur: blur(8px);
+}
+
+body {
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: white;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: var(--glass);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur); /* Safari support */
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Fallback for very old browsers */
+@supports not (backdrop-filter: blur(8px)) {
+    .glass-card { background: rgba(30, 30, 30, 0.9); }
+}
+
+/* Micro-animations */
+.fade-in-up {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-press:active {
+    transform: scale(0.95);
+    transition: 0.1s;
+}
+
+/* Loading Spinner - Minimal JS impact */
+.loader {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #fff;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Login | UniSmart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
+    
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .glass-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        input:-webkit-autofill {
+            -webkit-text-fill-color: white;
+            -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+</head>
+<body class="text-white p-5">
+    <div class="w-full max-w-md mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600/20 rounded-2xl mb-4 border border-blue-500/30">
+                <span class="text-3xl font-black text-blue-500">U</span>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight">Uni<span class="text-blue-500">Smart</span></h1>
+            <p class="text-slate-400 text-[10px] mt-1 uppercase tracking-widest font-bold">Secure Portal Access</p>
+        </div>
+
+        <div class="glass-container rounded-[2.5rem] p-8 shadow-2xl">
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2 ml-1">University Email</label>
+                    <input type="email" id="email" required placeholder="name@university.edu"
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white" />
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2 ml-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" required placeholder="••••••••"
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white pr-12" />
+                        
+                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 focus:outline-none transition-colors">
+                            <i id="toggleIcon" data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-3">
+                    <span id="btnText">Sign In</span>
+                </button>
+            </form>
+
+            <div id="errorMessage" class="mt-4 text-center text-red-400 text-xs font-medium hidden p-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
+        </div>
+
+        <div class="mt-8 text-center space-y-4">
+            <p class="text-sm text-slate-400">New here? <a href="signup.html" class="text-blue-400 font-semibold hover:underline">Create Account</a></p>
+            <p class="text-[10px] text-slate-600 uppercase tracking-widest font-bold">&copy; 2026 UniSmart Ecosystem</p>
+        </div>
+    </div>
+
+    <script>
+        const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkInitialSession();
+        });
+
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            const iconElement = document.getElementById("toggleIcon");
+            const isPassword = passwordInput.type === "password";
+            passwordInput.type = isPassword ? "text" : "password";
+            iconElement.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
+            lucide.createIcons();
+        }
+
+        async function validateAndRoute(user) {
+            const errorEl = document.getElementById("errorMessage");
+            console.log("Validating profile for user:", user.id);
+            
+            try {
+                // Fetch profile with a slight timeout safety
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('role, is_approved')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileError) {
+                    console.error("Profile Fetch Error:", profileError);
+                    throw new Error("Profile not found. If you just signed up, please wait a moment for the database to sync.");
+                }
+
+                if (!profile) throw new Error("User profile is missing.");
+
+                // Approval check
+                if (profile.is_approved !== true) {
+                    await supabaseClient.auth.signOut();
+                    throw new Error("🚫 Access Pending: Your account is awaiting admin approval.");
+                }
+
+                // Routing
+                const role = profile.role.toUpperCase();
+                console.log("Access Granted. Role:", role);
+                
+                if (role === 'LECTURER') {
+                    window.location.href = 'lecturer.html';
+                } else {
+                    window.location.href = 'student.html';
+                }
+
+            } catch (err) {
+                errorEl.innerText = err.message;
+                errorEl.classList.remove("hidden");
+                resetButton();
+            }
+        }
+
+        function resetButton() {
+            const btn = document.getElementById("loginBtn");
+            const btnText = document.getElementById("btnText");
+            btn.disabled = false;
+            btnText.innerText = "Sign In";
+        }
+
+        async function checkInitialSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) validateAndRoute(session.user);
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById("errorMessage");
+            const btn = document.getElementById("loginBtn");
+            const btnText = document.getElementById("btnText");
+
+            errorEl.classList.add("hidden");
+            btn.disabled = true;
+            btnText.innerHTML = `<span class="loader"></span> Verifying...`;
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+                const { data, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
+                
+                if (authError) throw authError;
+
+                if (data.user) {
+                    await validateAndRoute(data.user);
+                }
+
+            } catch (err) {
+                console.error("Auth Error:", err);
+                errorEl.innerText = err.message || "Invalid credentials";
+                errorEl.classList.remove("hidden");
+                resetButton();
+            }
+        });
+    </script>
+</body>
+</html>
