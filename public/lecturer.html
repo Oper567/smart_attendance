@@ -155,20 +155,23 @@
 
         async function setup() {
             const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) { window.location.href = 'login.html'; return; }
+            if (!user) { window.location.href = 'index.html'; return; }
             
             currentUser = user;
-            document.getElementById('lecturerDisplayName').innerText = `Certified: ${user.user_metadata.full_name || 'Academic Staff'}`;
+            // Access full_name from the user_metadata object
+            const name = user.user_metadata?.full_name || 'Academic Staff';
+            document.getElementById('lecturerDisplayName').innerText = `Certified: ${name}`;
             
             checkActiveSession();
         }
 
         async function checkActiveSession() {
-            const { data } = await supabaseClient
+            const name = currentUser.user_metadata?.full_name;
+            const { data, error } = await supabaseClient
                 .from('active_sessions')
                 .select('*')
                 .eq('is_active', true)
-                .eq('lecturer_name', currentUser.user_metadata.full_name)
+                .eq('lecturer_name', name)
                 .maybeSingle();
 
             if (data) {
@@ -192,12 +195,11 @@
             
             if (remaining > 0) {
                 runTimer(remaining, (session.duration_mins || 15) * 60);
+                initRealtimeSubscription();
+                fetchExistingLogs();
             } else {
                 finishSession();
             }
-
-            initRealtimeSubscription();
-            fetchExistingLogs();
         }
 
         async function startSession() {
@@ -210,11 +212,12 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
                 const duration = parseInt(durationInput.value);
+                const name = currentUser.user_metadata?.full_name;
 
-                // Close existing
+                // Close existing sessions for this lecturer
                 await supabaseClient.from('active_sessions')
                     .update({ is_active: false })
-                    .eq('lecturer_name', currentUser.user_metadata.full_name);
+                    .eq('lecturer_name', name);
 
                 const { data, error } = await supabaseClient
                     .from('active_sessions')
@@ -225,18 +228,22 @@
                         lng: pos.coords.longitude,
                         is_active: true,
                         duration_mins: duration,
-                        lecturer_name: currentUser.user_metadata.full_name
+                        lecturer_name: name
                     }])
                     .select()
                     .single();
 
-                if (error) alert(error.message);
-                else resumeSession(data);
-            }, (err) => alert("GPS Required to verify location security."));
+                if (error) {
+                    alert("Error starting session: " + error.message);
+                } else {
+                    resumeSession(data);
+                }
+            }, (err) => {
+                alert("GPS Required to verify location security for attendance.");
+            });
         }
 
         function initRealtimeSubscription() {
-            // Unsubscribe from any previous to prevent double-logging
             supabaseClient.removeAllChannels();
 
             supabaseClient.channel('attendance_live')
@@ -259,6 +266,8 @@
             if (data) {
                 document.getElementById('studentList').innerHTML = "";
                 presentStudents = [];
+                // Sort logs by time (descending)
+                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 data.forEach(log => renderStudentRow(log));
             }
         }
@@ -266,9 +275,11 @@
         function renderStudentRow(log) {
             const container = document.getElementById('studentList');
             const emptyMsg = document.getElementById('emptyMsg');
-            if(emptyMsg) emptyMsg.remove();
-
+            
+            // Avoid duplicate rendering
             if (presentStudents.some(s => s.matric_no === log.matric_no)) return;
+            
+            if(emptyMsg) emptyMsg.remove();
             presentStudents.push(log);
 
             const card = `
@@ -299,7 +310,10 @@
                 const mins = Math.floor(remaining / 60);
                 const secs = remaining % 60;
                 document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                document.getElementById('progress').style.width = `${(remaining / total) * 100}%`;
+                
+                // Progress bar decreases over time
+                const progressWidth = (remaining / total) * 100;
+                document.getElementById('progress').style.width = `${progressWidth}%`;
 
                 if (remaining <= 0) {
                     clearInterval(countdown);
@@ -315,6 +329,9 @@
             document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
             document.getElementById('activeCode').innerText = "000000";
             document.getElementById('geoStatus').innerText = "Session Expired";
+            document.getElementById('timer').innerText = "00:00";
+            document.getElementById('progress').style.width = "0%";
+            supabaseClient.removeAllChannels();
         }
 
         function downloadCourseReport() {
@@ -331,7 +348,7 @@
 
         async function logout() { 
             await supabaseClient.auth.signOut(); 
-            window.location.href = 'login.html'; 
+            window.location.href = 'index.html'; 
         }
 
         setup();
