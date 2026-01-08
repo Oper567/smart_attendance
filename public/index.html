@@ -67,21 +67,22 @@
                 <button type="submit" id="login-btn" class="btn btn-primary w-100 shadow-lg">Sign In</button>
             </form>
             <div id="error-msg" class="mt-3 text-danger small text-center d-none p-2 bg-danger bg-opacity-10 rounded-3"></div>
-            <p class="mt-4 text-center small text-secondary">
-                New user? <a href="signup.html" class="text-primary fw-bold text-decoration-none">Create Account</a>
-            </p>
         </div>
     </section>
 
     <section id="student-view" class="view-section w-100" style="max-width: 500px;">
         <div class="glass-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold mb-0">Student Portal</h3>
+                <div>
+                    <h3 class="fw-bold mb-0">Student Portal</h3>
+                    <span class="badge bg-info bg-opacity-10 text-info uppercase" id="user-display">Student</span>
+                </div>
                 <button onclick="logout()" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-power"></i></button>
             </div>
             <div class="bg-primary bg-opacity-10 p-4 rounded-4 text-center mb-4 border border-primary border-opacity-10">
-                <label class="small text-primary fw-bold mb-3 d-block">ENTER SESSION CODE</label>
+                <label class="small text-primary fw-bold mb-3 d-block uppercase tracking-widest">Enter Session Code</label>
                 <input type="text" id="class-code" class="form-control glass-input text-center fs-1 fw-bold" maxlength="6" placeholder="000000">
+                <p class="text-secondary small mt-2 mb-0"><i class="bi bi-geo-fill"></i> Geofence: 500m</p>
             </div>
             <button onclick="submitAttendance()" id="submit-attn-btn" class="btn btn-primary w-100 py-3">Mark Attendance</button>
         </div>
@@ -102,7 +103,7 @@
                         <div class="p-4 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10">
                             <p class="small text-secondary mb-1">JOIN CODE</p>
                             <div id="generated-otp" class="otp-display my-2">------</div>
-                            <p class="text-warning small mb-0"><i class="bi bi-geo-alt"></i> Geofence Active (100m)</p>
+                            <p class="text-warning small mb-0"><i class="bi bi-broadcast"></i> Radius Active (500m)</p>
                         </div>
                     </div>
                 </div>
@@ -113,10 +114,10 @@
 </div>
 
 <script>
-    // Supabase Configuration
     const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    const GEOFENCE_RADIUS = 500; // Radius in meters
 
     function switchView(viewId) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -125,7 +126,7 @@
 
     // --- AUTHENTICATION ---
     document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault(); // CRITICAL: Stops the '?' refresh
+        e.preventDefault();
         const email = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value;
         const btn = document.getElementById('login-btn');
@@ -139,22 +140,26 @@
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
             if (error) throw error;
 
-            // Fetch Profile for Role and Approval
             const { data: profile, error: pError } = await supabaseClient
                 .from('profiles')
                 .select('*')
                 .eq('id', data.user.id)
                 .single();
 
-            if (pError || !profile) throw new Error("Profile not found in database.");
+            if (pError || !profile) throw new Error("Profile not synchronized.");
 
             if (!profile.is_approved) {
                 await supabaseClient.auth.signOut();
-                throw new Error("Access Denied: Your account is awaiting admin approval.");
+                throw new Error("Account pending admin approval.");
             }
 
-            if (profile.role.toUpperCase() === 'LECTURER') switchView('lecturer-view');
-            else switchView('student-view');
+            // Role-based Redirection
+            if (profile.role.toUpperCase() === 'LECTURER') {
+                switchView('lecturer-view');
+            } else {
+                document.getElementById('user-display').innerText = profile.full_name || 'Student';
+                switchView('student-view');
+            }
 
         } catch (error) {
             errEl.innerText = error.message;
@@ -169,20 +174,31 @@
         location.reload();
     }
 
-    // --- LECTURER GEOFENCING ---
+    // --- GEOLOCATION LOGIC ---
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Radius of earth in meters
+        const dLat = (lat2-lat1) * Math.PI/180;
+        const dLon = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // --- LECTURER: START SESSION ---
     async function startLecturerSession() {
-        const course = document.getElementById('course-name').value;
+        const course = document.getElementById('course-name').value.trim();
         const btn = document.getElementById('start-btn');
         if(!course) return alert("Enter course name");
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="loader"></span> Getting GPS...';
+        btn.innerHTML = '<span class="loader"></span> Establishing GPS Lock...';
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const otp = Math.floor(100000 + Math.random() * 900000);
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const { error } = await supabaseClient.from('active_sessions').insert([{
                 course_name: course,
-                otp_code: otp.toString(),
+                otp_code: otp,
                 lat: pos.coords.latitude,
                 lng: pos.coords.longitude,
                 is_active: true
@@ -192,41 +208,33 @@
                 document.getElementById('generated-otp').innerText = otp;
                 document.getElementById('otp-area').classList.remove('d-none');
                 btn.innerText = 'Session Active';
+                btn.className = "btn btn-success w-100 py-3";
             } else {
-                alert("Database Error: " + error.message);
+                alert("Database Sync Error: " + error.message);
                 btn.disabled = false;
                 btn.innerText = 'Generate OTP Code';
             }
         }, (err) => {
-            alert("Please enable GPS to start a session.");
+            alert("GPS REQUIRED: You must enable location services to start a class.");
             btn.disabled = false;
             btn.innerText = 'Generate OTP Code';
-        });
+        }, { enableHighAccuracy: true });
     }
 
-    // --- STUDENT DISTANCE LOGIC ---
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const dLat = (lat2-lat1) * Math.PI/180;
-        const dLon = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
+    // --- STUDENT: SUBMIT ATTENDANCE ---
     async function submitAttendance() {
-        const code = document.getElementById('class-code').value;
+        const code = document.getElementById('class-code').value.trim();
         const btn = document.getElementById('submit-attn-btn');
+        if(code.length < 6) return alert("Enter 6-digit session code");
         
         btn.disabled = true;
-        btn.innerHTML = '<span class="loader"></span> Verifying Location...';
+        btn.innerHTML = '<span class="loader"></span> Validating Proximity...';
 
         const { data: session } = await supabaseClient.from('active_sessions')
-            .select('*').eq('otp_code', code).eq('is_active', true).single();
+            .select('*').eq('otp_code', code).eq('is_active', true).maybeSingle();
 
         if (!session) {
-            alert("Invalid or expired code");
+            alert("Invalid or expired session code.");
             btn.disabled = false;
             btn.innerText = 'Mark Attendance';
             return;
@@ -235,19 +243,32 @@
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, session.lat, session.lng);
             
-            if (dist > 100) {
-                alert(`Too far! You are ${Math.round(dist)}m away. Move closer to the lecturer.`);
+            if (dist > GEOFENCE_RADIUS) {
+                alert(`OUT OF RANGE: You are ${Math.round(dist)}m away. Move within ${GEOFENCE_RADIUS}m of the lecturer.`);
                 btn.disabled = false;
                 btn.innerText = 'Mark Attendance';
             } else {
-                alert("Success! Presence verified within " + Math.round(dist) + "m.");
-                btn.innerText = 'Verified ✅';
+                // Log attendance to DB
+                const { error: logErr } = await supabaseClient.from('attendance_logs').insert([{
+                    session_id: session.id,
+                    student_id: (await supabaseClient.auth.getUser()).data.user.id,
+                    course_name: session.course_name,
+                    distance: Math.round(dist)
+                }]);
+
+                if(logErr) {
+                    alert("Attendance already recorded for this session.");
+                } else {
+                    alert(`Success! Presence verified at ${Math.round(dist)}m.`);
+                    btn.innerText = 'Verified ✅';
+                    btn.className = "btn btn-success w-100 py-3";
+                }
             }
-        }, () => {
-            alert("GPS access required to verify attendance.");
+        }, (err) => {
+            alert("Location access denied. Please enable GPS.");
             btn.disabled = false;
             btn.innerText = 'Mark Attendance';
-        });
+        }, { enableHighAccuracy: true });
     }
 </script>
 </body>

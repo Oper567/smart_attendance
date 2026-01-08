@@ -31,7 +31,7 @@
             </div>
             <div>
                 <h1 class="text-lg font-extrabold tracking-tight">Uni<span class="text-blue-500">Smart</span></h1>
-                <p id="welcomeName" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Verifying...</p>
+                <p id="welcomeName" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Verifying Identity...</p>
             </div>
         </div>
         <button onclick="logout()" class="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-red-400 border border-white/5 transition-all">
@@ -40,13 +40,13 @@
     </header>
 
     <main class="max-w-md mx-auto w-full space-y-4 md:space-y-6 view-transition pb-10">
-        <div class="glass-card p-5 md:p-8 rounded-[2rem] relative overflow-hidden">
+        <div class="glass-card p-5 md:p-8 rounded-[2.5rem] relative overflow-hidden">
             <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full"></div>
             
             <div class="text-center mb-6">
                 <div class="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full mb-3 border border-blue-500/20">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Geofence: 500m</span>
+                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Active Geofence</span>
                 </div>
                 <h2 class="text-xl font-black text-white">Class Check-in</h2>
             </div>
@@ -69,17 +69,15 @@
             <div id="statusMsg" class="mt-4 text-center text-[10px] font-bold p-3 rounded-xl hidden"></div>
         </div>
 
-        <div class="glass-card p-5 rounded-[2rem]">
+        <div class="glass-card p-5 rounded-[2.5rem]">
             <div class="flex justify-between items-center mb-4 px-1">
-                <div>
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-400">Your Logs</h3>
-                </div>
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-400">Attendance History</h3>
                 <span id="recordCount" class="text-[9px] font-black bg-blue-500/10 text-blue-500 px-2 py-1 rounded-lg border border-blue-500/10">0 Logs</span>
             </div>
             
-            <div id="attendanceHistory" class="space-y-2 max-h-[220px] md:max-h-[350px] overflow-y-auto pr-1">
+            <div id="attendanceHistory" class="space-y-2 max-h-[250px] overflow-y-auto pr-1">
                 <div class="text-center py-8 opacity-30">
-                    <p class="text-[10px] uppercase tracking-widest">Loading History...</p>
+                    <p class="text-[10px] uppercase tracking-widest">Syncing Records...</p>
                 </div>
             </div>
         </div>
@@ -94,13 +92,16 @@
     async function init() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) { window.location.href = 'login.html'; return; }
+        
         currentUser = user;
-        document.getElementById('welcomeName').innerText = `Hello, ${user.user_metadata.full_name || 'Student'}`;
+        document.getElementById('welcomeName').innerText = `Welcome, ${user.user_metadata.full_name || 'Student'}`;
         loadHistory();
     }
 
+    /** * Haversine formula for calculating distance between two coordinates
+     */
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
+        const R = 6371e3; // Earth radius in meters
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -111,15 +112,15 @@
 
     async function submitAttendance() {
         const codeInput = document.getElementById('attendanceCode');
-        const btn = document.getElementById('submitBtn');
         const code = codeInput.value;
 
-        if (code.length !== 6) return showStatus("Enter 6-digit code", "error");
+        if (code.length !== 6) return showStatus("Enter the 6-digit session code", "error");
 
         setLoading(true);
 
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
+                // 1. Fetch the active session matching the OTP
                 const { data: session, error: sError } = await supabaseClient
                     .from('active_sessions')
                     .select('*')
@@ -127,8 +128,9 @@
                     .eq('is_active', true)
                     .maybeSingle();
 
-                if (sError || !session) throw new Error("Code invalid or session ended.");
+                if (sError || !session) throw new Error("Invalid code or session has expired.");
 
+                // 2. Perform Geofence Validation
                 const distance = calculateDistance(
                     position.coords.latitude, 
                     position.coords.longitude, 
@@ -136,11 +138,12 @@
                     session.lng
                 );
 
-                // Updated radius check to 500m
-                if (distance > 500) {
-                    throw new Error(`Out of range (${Math.round(distance)}m). Move closer.`);
+                const MAX_RADIUS = 500; // 500 meters
+                if (distance > MAX_RADIUS) {
+                    throw new Error(`Location Error: You are ${Math.round(distance)}m away. Move closer to the lecturer.`);
                 }
 
+                // 3. Log the attendance
                 const { error: aError } = await supabaseClient.from('attendance_logs').insert([{
                     student_name: currentUser.user_metadata.full_name,
                     matric_no: currentUser.user_metadata.matric_no,
@@ -150,22 +153,26 @@
                 }]);
 
                 if (aError) {
-                    if (aError.code === '23505') throw new Error("Already signed in for this class.");
+                    // Check for duplicate check-ins
+                    if (aError.code === '23505') throw new Error("Attendance already recorded for this session.");
                     throw aError;
                 }
 
-                showStatus(`Success: ${session.course_code}`, "success");
+                showStatus(`Checked-in: ${session.course_code}`, "success");
                 codeInput.value = '';
                 loadHistory();
+                
             } catch (err) {
                 showStatus(err.message, "error");
             } finally {
                 setLoading(false);
             }
         }, (geoErr) => {
-            showStatus("Enable GPS to mark attendance", "error");
+            let errorMsg = "Please enable GPS to mark attendance.";
+            if (geoErr.code === 1) errorMsg = "Permission denied. Enable location services.";
+            showStatus(errorMsg, "error");
             setLoading(false);
-        }, { enableHighAccuracy: true, timeout: 10000 });
+        }, { enableHighAccuracy: true, timeout: 8000 });
     }
 
     async function loadHistory() {
@@ -180,22 +187,24 @@
         document.getElementById('recordCount').innerText = `${data.length} Logs`;
 
         if (data.length === 0) {
-            container.innerHTML = `<p class="text-center py-10 opacity-20 text-[10px] font-black">NO RECORDS</p>`;
+            container.innerHTML = `<p class="text-center py-10 opacity-20 text-[10px] font-black uppercase tracking-tighter">No attendance records found</p>`;
             return;
         }
 
         container.innerHTML = data.map(rec => `
-            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/[0.07] transition-colors">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-black text-[10px]">
                         ${rec.course_code.substring(0,3)}
                     </div>
                     <div>
                         <p class="font-black text-xs">${rec.course_code}</p>
-                        <p class="text-[8px] text-slate-500 font-bold uppercase mt-0.5">${new Date(rec.signed_at).toLocaleDateString()}</p>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase mt-0.5">${new Date(rec.signed_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
                     </div>
                 </div>
-                <span class="text-[7px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full uppercase tracking-tighter">Verified</span>
+                <div class="flex flex-col items-end">
+                    <span class="text-[7px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full uppercase tracking-tighter border border-emerald-400/20">Verified</span>
+                </div>
             </div>
         `).join('');
     }
@@ -203,7 +212,9 @@
     function setLoading(isLoading) {
         const btn = document.getElementById('submitBtn');
         btn.disabled = isLoading;
-        btn.innerHTML = isLoading ? "Verifying..." : "Mark Attendance";
+        btn.innerHTML = isLoading ? 
+            `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Validating...` 
+            : "Mark Attendance";
     }
 
     function showStatus(text, type) {
@@ -211,10 +222,13 @@
         msg.innerText = text;
         msg.classList.remove('hidden', 'status-success', 'status-error');
         msg.classList.add(type === 'success' ? 'status-success' : 'status-error');
-        setTimeout(() => msg.classList.add('hidden'), 5000);
+        // Vibrate on mobile for feedback
+        if (window.navigator.vibrate) window.navigator.vibrate(type === 'success' ? 50 : 200);
+        setTimeout(() => msg.classList.add('hidden'), 6000);
     }
 
     async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
+    
     init();
 </script>
 </body>

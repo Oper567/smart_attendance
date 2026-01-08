@@ -8,93 +8,136 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top right, #1e293b, #020617); min-height: 100vh; color: white; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .code-display { background: linear-gradient(135deg, #fff 30%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        #codeOverlay.hidden { display: none !important; }
+        :root { --accent: #3b82f6; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top right, #1e293b, #020617); min-height: 100vh; color: white; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(255, 255, 255, 0.05); }
+        .code-display { letter-spacing: 0.5rem; background: linear-gradient(135deg, #fff 30%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .pulse-border { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        #studentList::-webkit-scrollbar { width: 5px; }
+        #studentList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <header class="max-w-6xl mx-auto flex justify-between items-center mb-10">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <span class="font-black text-xl">U</span>
+    <header class="max-w-6xl mx-auto flex justify-between items-center mb-12">
+        <div class="flex items-center gap-4 group">
+            <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:rotate-6 transition-transform">
+                <span class="font-black text-2xl">U</span>
             </div>
             <div>
-                <h1 class="text-xl font-black">Lecturer<span class="text-blue-500">Hub</span></h1>
-                <p id="lecturerDisplayName" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Verifying Identity...</p>
+                <h1 class="text-2xl font-black tracking-tight">Lecturer<span class="text-blue-500">Hub</span> <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-md ml-2">PRO</span></h1>
+                <p id="lecturerDisplayName" class="text-xs text-slate-400 font-medium">Initialising Secure Environment...</p>
             </div>
         </div>
-        <button onclick="logout()" class="p-2.5 rounded-xl bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 border border-white/5 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        </button>
+        <div class="flex items-center gap-3">
+            <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-[10px] font-bold text-emerald-500 uppercase">Live</span>
+            </div>
+            <button onclick="logout()" class="p-3 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all border border-white/5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+        </div>
     </header>
 
-    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-4 space-y-6">
-            <div class="glass-card p-6 rounded-[2rem] shadow-2xl">
-                <h3 class="text-[10px] font-black mb-6 text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <span class="w-1 h-3 bg-blue-500 rounded-full"></span> Session Control
+            <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16"></div>
+                <h3 class="text-sm font-black mb-8 flex items-center gap-3 text-slate-400 uppercase tracking-widest">
+                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
+                    Session Config
                 </h3>
                 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[9px] uppercase font-black text-slate-500 mb-2 ml-1">Course Code</label>
-                        <input type="text" id="courseCode" placeholder="e.g. CSC301" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white font-bold uppercase">
+                <div class="space-y-6">
+                    <div class="group">
+                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest group-focus-within:text-blue-500 transition-colors">Course Identifier</label>
+                        <input type="text" id="courseCode" placeholder="Enter Course (e.g. SWE201)" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold uppercase placeholder:opacity-20 text-lg">
                     </div>
                     <div>
-                        <label class="block text-[9px] uppercase font-black text-slate-500 mb-2 ml-1">Duration</label>
-                        <select id="duration" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white font-bold">
-                            <option value="15">15 Minutes</option>
+                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Broadcast Window</label>
+                        <select id="duration" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-slate-200 font-bold">
+                            <option value="5">05 Minutes</option>
+                            <option value="15" selected>15 Minutes</option>
                             <option value="30">30 Minutes</option>
                             <option value="60">60 Minutes</option>
                         </select>
                     </div>
-                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95">
-                        START BROADCAST
+                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                        <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>ACTIVATE BROADCAST</span>
                     </button>
                 </div>
             </div>
 
-            <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-                    <p id="geoStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">GPS Offline</p>
+            <div class="glass-card p-6 rounded-3xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Geofence Status</p>
+                        <p id="geoStatus" class="text-xs font-bold text-slate-300">Awaiting Signal...</p>
+                    </div>
                 </div>
-                <span class="text-[8px] font-black text-slate-600">V2.4</span>
+                <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
             </div>
         </div>
 
         <div class="lg:col-span-8 space-y-6">
-            <div class="glass-card p-10 rounded-[2.5rem] text-center relative overflow-hidden min-h-[300px] flex flex-col justify-center">
-                <div id="codeOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-20 flex flex-col items-center justify-center">
-                    <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <div class="glass-card p-10 rounded-[3rem] text-center relative overflow-hidden">
+                <div id="codeOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl z-20 flex flex-col items-center justify-center transition-all duration-700">
+                    <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     </div>
-                    <p class="text-[10px] uppercase tracking-widest font-black text-slate-500">Broadcast Ready</p>
+                    <p class="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Secure Channel Offline</p>
                 </div>
 
                 <div class="relative z-10">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-black text-blue-500 uppercase">Class OTP</span>
-                        <span id="timer" class="text-xl font-black font-mono">00:00</span>
+                    <div class="flex justify-between items-center mb-10">
+                        <div class="flex flex-col items-start">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Dynamic OTP</span>
+                            <div class="h-1 w-8 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <div class="text-right">
+                            <span id="timer" class="text-3xl font-black font-mono text-white tabular-nums">00:00</span>
+                            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Time Remaining</p>
+                        </div>
                     </div>
-                    <h2 id="activeCode" class="text-7xl md:text-8xl font-black code-display tracking-widest">000000</h2>
+
+                    <h2 id="activeCode" class="text-8xl md:text-9xl font-black code-display my-8 drop-shadow-2xl">000000</h2>
+                    
+                    <div class="max-w-md mx-auto">
+                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
+                            <div id="progress" class="bg-gradient-to-r from-blue-600 to-blue-400 h-full w-0 rounded-full transition-all duration-1000"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="glass-card p-6 rounded-[2rem]">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-[10px] font-black uppercase text-slate-400">Live Attendance</h3>
-                    <div class="flex gap-2">
-                        <button onclick="downloadCourseReport()" class="text-[8px] bg-white/5 px-3 py-1.5 rounded-lg font-black border border-white/5">EXPORT CSV</button>
-                        <div id="studentCount" class="px-3 py-1.5 bg-blue-500/10 text-blue-500 rounded-lg text-[8px] font-black">0 PRESENT</div>
+            <div class="glass-card p-8 rounded-[2.5rem]">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Live Manifest</h3>
+                        <p class="text-[10px] text-slate-600 font-bold" id="sessionTimeInfo">No active session</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="downloadCourseReport()" class="text-[10px] bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-2 rounded-xl border border-white/10 font-black transition-all">
+                            EXPORT DATA
+                        </button>
+                        <div id="studentCount" class="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] font-black shadow-lg shadow-blue-500/20">0 PRESENT</div>
                     </div>
                 </div>
 
-                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
+                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 content-start">
+                    <div id="emptyMsg" class="col-span-full py-20 flex flex-col items-center opacity-30">
+                        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <p class="text-[10px] uppercase tracking-widest font-black">Waiting for student check-ins...</p>
                     </div>
+                </div>
             </div>
         </div>
     </main>
@@ -105,106 +148,193 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         let currentUser = null;
+        let activeCourseCode = null;
+        let countdown = null;
         let currentSessionId = null;
         let presentStudents = [];
-        let countdown = null;
 
-        async function init() {
+        async function setup() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'login.html'; return; }
-            currentUser = user;
-            document.getElementById('lecturerDisplayName').innerText = `Lecturer: ${user.user_metadata.full_name || 'Staff'}`;
             
-            // Reconnect to active session if exists
-            const { data: session } = await supabaseClient
+            currentUser = user;
+            document.getElementById('lecturerDisplayName').innerText = `Certified: ${user.user_metadata.full_name || 'Academic Staff'}`;
+            
+            checkActiveSession();
+        }
+
+        async function checkActiveSession() {
+            const { data } = await supabaseClient
                 .from('active_sessions')
                 .select('*')
                 .eq('is_active', true)
                 .eq('lecturer_name', currentUser.user_metadata.full_name)
                 .maybeSingle();
 
-            if (session) resumeSession(session);
-        }
-
-        async function startSession() {
-            const course = document.getElementById('courseCode').value.toUpperCase();
-            if (!course) return alert("Enter Course Code");
-
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                // End old sessions
-                await supabaseClient.from('active_sessions').update({ is_active: false }).eq('lecturer_name', currentUser.user_metadata.full_name);
-
-                const { data, error } = await supabaseClient
-                    .from('active_sessions')
-                    .insert([{
-                        course_code: course,
-                        otp: otp,
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        is_active: true,
-                        lecturer_name: currentUser.user_metadata.full_name,
-                        duration_mins: parseInt(document.getElementById('duration').value)
-                    }])
-                    .select().single();
-
-                if (error) alert(error.message);
-                else resumeSession(data);
-            }, () => alert("GPS Permission Required"));
+            if (data) {
+                resumeSession(data);
+            }
         }
 
         function resumeSession(session) {
             currentSessionId = session.id;
+            activeCourseCode = session.course_code;
+            
             document.getElementById('codeOverlay').classList.add('hidden');
             document.getElementById('activeCode').innerText = session.otp;
-            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]";
-            document.getElementById('geoStatus').innerText = "Broadcasting Live";
+            document.getElementById('geoStatus').innerText = `Broadcasting Live`;
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-border";
+            document.getElementById('sessionTimeInfo').innerText = `Course: ${session.course_code}`;
+            
+            const startTime = new Date(session.created_at).getTime();
+            const durationMs = (session.duration_mins || 15) * 60 * 1000;
+            const remaining = Math.floor((startTime + durationMs - Date.now()) / 1000);
+            
+            if (remaining > 0) {
+                runTimer(remaining, (session.duration_mins || 15) * 60);
+            } else {
+                finishSession();
+            }
 
-            // Start Realtime
-            supabaseClient.channel(`attendance:${session.id}`)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance_logs', filter: `session_id=eq.${session.id}` }, 
-                payload => renderStudent(payload.new))
-                .subscribe();
-
-            fetchLogs(session.id);
+            initRealtimeSubscription();
+            fetchExistingLogs();
         }
 
-        async function fetchLogs(sid) {
-            const { data } = await supabaseClient.from('attendance_logs').select('*').eq('session_id', sid);
-            document.getElementById('studentList').innerHTML = "";
-            presentStudents = [];
-            if (data) data.forEach(renderStudent);
+        async function startSession() {
+            const courseInput = document.getElementById('courseCode');
+            const durationInput = document.getElementById('duration');
+            const courseValue = courseInput.value.trim().toUpperCase();
+
+            if (!courseValue) { alert("Please enter a course code."); return; }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                const duration = parseInt(durationInput.value);
+
+                // Close existing
+                await supabaseClient.from('active_sessions')
+                    .update({ is_active: false })
+                    .eq('lecturer_name', currentUser.user_metadata.full_name);
+
+                const { data, error } = await supabaseClient
+                    .from('active_sessions')
+                    .insert([{
+                        course_code: courseValue, 
+                        otp: otp,
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        is_active: true,
+                        duration_mins: duration,
+                        lecturer_name: currentUser.user_metadata.full_name
+                    }])
+                    .select()
+                    .single();
+
+                if (error) alert(error.message);
+                else resumeSession(data);
+            }, (err) => alert("GPS Required to verify location security."));
         }
 
-        function renderStudent(log) {
+        function initRealtimeSubscription() {
+            // Unsubscribe from any previous to prevent double-logging
+            supabaseClient.removeAllChannels();
+
+            supabaseClient.channel('attendance_live')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'attendance_logs',
+                    filter: `course_code=eq.${activeCourseCode}`
+                }, (payload) => {
+                    renderStudentRow(payload.new);
+                }).subscribe();
+        }
+
+        async function fetchExistingLogs() {
+            const { data } = await supabaseClient
+                .from('attendance_logs')
+                .select('*')
+                .eq('course_code', activeCourseCode);
+            
+            if (data) {
+                document.getElementById('studentList').innerHTML = "";
+                presentStudents = [];
+                data.forEach(log => renderStudentRow(log));
+            }
+        }
+
+        function renderStudentRow(log) {
+            const container = document.getElementById('studentList');
+            const emptyMsg = document.getElementById('emptyMsg');
+            if(emptyMsg) emptyMsg.remove();
+
             if (presentStudents.some(s => s.matric_no === log.matric_no)) return;
             presentStudents.push(log);
-            document.getElementById('studentCount').innerText = `${presentStudents.length} PRESENT`;
-            
-            const row = `
-                <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div>
-                        <p class="text-[10px] font-black">${log.student_name}</p>
-                        <p class="text-[8px] text-slate-500 font-mono">${log.matric_no}</p>
+
+            const card = `
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 animate-[fadeIn_0.5s_ease-out]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-black text-xs uppercase">
+                            ${log.student_name.charAt(0)}
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-black uppercase">${log.student_name}</p>
+                            <p class="text-[9px] text-slate-500 font-mono tracking-tighter">${log.matric_no}</p>
+                        </div>
                     </div>
-                    <span class="text-[7px] font-black text-emerald-400">VERIFIED</span>
+                    <div class="text-right">
+                        <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">VERIFIED</span>
+                    </div>
                 </div>
             `;
-            document.getElementById('studentList').insertAdjacentHTML('afterbegin', row);
+            container.insertAdjacentHTML('afterbegin', card);
+            document.getElementById('studentCount').innerText = `${presentStudents.length} PRESENT`;
+        }
+
+        function runTimer(seconds, total) {
+            if(countdown) clearInterval(countdown);
+            let remaining = seconds;
+            
+            countdown = setInterval(() => {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                document.getElementById('progress').style.width = `${(remaining / total) * 100}%`;
+
+                if (remaining <= 0) {
+                    clearInterval(countdown);
+                    finishSession();
+                }
+                remaining--;
+            }, 1000);
+        }
+
+        async function finishSession() {
+            await supabaseClient.from('active_sessions').update({ is_active: false }).eq('id', currentSessionId);
+            document.getElementById('codeOverlay').classList.remove('hidden');
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
+            document.getElementById('activeCode').innerText = "000000";
+            document.getElementById('geoStatus').innerText = "Session Expired";
         }
 
         function downloadCourseReport() {
-            let csv = "Name,Matric\n" + presentStudents.map(s => `${s.student_name},${s.matric_no}`).join("\n");
+            if (!presentStudents.length) { alert("No data to export."); return; }
+            let csv = "Name,Matric No,Timestamp\n";
+            presentStudents.forEach(s => csv += `${s.student_name},${s.matric_no},${new Date(s.created_at).toLocaleString()}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `Attendance.csv`;
+            a.href = url;
+            a.download = `Attendance_${activeCourseCode}_Report.csv`;
             a.click();
         }
 
-        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
-        init();
+        async function logout() { 
+            await supabaseClient.auth.signOut(); 
+            window.location.href = 'login.html'; 
+        }
+
+        setup();
     </script>
 </body>
 </html>
