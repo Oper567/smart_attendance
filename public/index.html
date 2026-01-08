@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root { --accent: #3b82f6; --success: #10b981; --danger: #ef4444; }
         body {
@@ -18,7 +20,7 @@
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2.5rem; padding: 2rem;
+            border-radius: 2rem; padding: 2rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
         .glass-input {
@@ -27,106 +29,64 @@
             color: white !important; border-radius: 1rem; padding: 14px;
         }
         .btn-press:active { transform: scale(0.96); }
-        
-        /* Navigation Sidebar/Top for Desktop, Bottom for Mobile */
-        .app-nav {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            z-index: 1000;
-        }
-
-        /* Animations */
         .view-section { display: none; animation: slideUp 0.4s ease-out; }
         .view-section.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
         .otp-display {
-            font-size: 3.5rem; font-weight: 800; letter-spacing: 0.5rem;
+            font-size: 3rem; font-weight: 800; letter-spacing: 0.5rem;
             color: var(--accent); text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
         }
-
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--success); margin-right: 5px; box-shadow: 0 0 10px var(--success); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--success); margin-right: 5px; }
     </style>
 </head>
 <body>
 
 <div class="toast-container position-fixed top-0 end-0 p-3">
-    <div id="appToast" class="toast align-items-center text-white bg-dark border-0 rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="appToast" class="toast align-items-center text-white bg-dark border-0 rounded-4" role="alert">
         <div class="d-flex">
-            <div class="toast-body">
-                <i class="bi bi-info-circle me-2 text-primary"></i> <span id="toast-text">Message here...</span>
-            </div>
+            <div class="toast-body"><span id="toast-text"></span></div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
 
-<div id="app" class="container py-4 mb-5">
+<div id="app" class="container py-4">
     
     <section id="login-view" class="view-section active">
         <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
             <div class="glass-card w-100" style="max-width: 400px;">
                 <div class="text-center mb-5">
-                    <div class="bg-primary bg-opacity-10 d-inline-block p-3 rounded-4 mb-3 border border-primary border-opacity-25">
-                        <i class="bi bi-shield-lock-fill text-primary fs-1"></i>
-                    </div>
                     <h1 class="h2 fw-extrabold">Uni<span class="text-primary">Smart</span></h1>
-                    <p class="text-secondary small">Smart Attendance v2.0</p>
+                    <p class="text-secondary small">Secure Portal Access</p>
                 </div>
-                
                 <form id="login-form">
                     <div class="mb-3">
-                        <input type="text" id="login-id" class="form-control glass-input" placeholder="Matric No / Email" required>
+                        <input type="email" id="login-email" class="form-control glass-input" placeholder="Email" required>
                     </div>
                     <div class="mb-4">
                         <input type="password" id="login-pass" class="form-control glass-input" placeholder="Password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold py-3 rounded-4 btn-press shadow-lg">
-                        Sign In <i class="bi bi-arrow-right-short ms-1"></i>
-                    </button>
+                    <button type="submit" id="login-btn" class="btn btn-primary w-100 fw-bold py-3 rounded-4 btn-press">Sign In</button>
                 </form>
                 <p class="mt-4 text-center small text-secondary">
-                    Not registered? <a href="signup.html" class="text-primary fw-bold text-decoration-none">Create Account</a>
+                    New here? <a href="signup.html" class="text-primary fw-bold text-decoration-none">Create Account</a>
                 </p>
             </div>
         </div>
     </section>
 
     <section id="student-view" class="view-section">
-        <div class="max-w-md mx-auto" style="max-width: 500px; margin: auto;">
-            <div class="glass-card mb-4 border-primary border-opacity-25">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h3 id="welcome-msg" class="fw-extrabold mb-1">Hi, Student</h3>
-                        <p class="small text-secondary mb-0"><span class="status-dot"></span> Online & Secure</p>
-                    </div>
-                    <button onclick="logout()" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-box-arrow-right"></i></button>
+        <div class="mx-auto" style="max-width: 500px;">
+            <div class="glass-card mb-4">
+                <div class="d-flex justify-content-between mb-4">
+                    <h3 id="student-name" class="fw-bold mb-0">Hi, Student</h3>
+                    <button onclick="logout()" class="btn btn-outline-danger btn-sm"><i class="bi bi-power"></i></button>
                 </div>
-
-                <div class="bg-primary bg-opacity-10 p-4 rounded-4 text-center mb-4 border border-primary border-opacity-10">
-                    <p class="small text-primary fw-bold mb-3 uppercase tracking-widest">SESSION CODE</p>
-                    <input type="text" id="class-code" class="form-control glass-input text-center fs-1 fw-bold text-white border-0 bg-transparent" maxlength="6" placeholder="000000">
+                <div class="bg-primary bg-opacity-10 p-4 rounded-4 text-center mb-4">
+                    <label class="small text-primary fw-bold mb-2">ENTER SESSION CODE</label>
+                    <input type="text" id="class-code" class="form-control glass-input text-center fs-1 fw-bold" maxlength="6" placeholder="000000">
                 </div>
-                
-                <button onclick="submitAttendance()" class="btn btn-primary w-100 fw-bold py-3 rounded-4 btn-press">
-                    Verify Presence
-                </button>
-            </div>
-            
-            <div class="row g-3">
-                <div class="col-6">
-                    <div class="glass-card p-3 text-center rounded-4 h-100">
-                        <p class="text-secondary small mb-1">Attendance</p>
-                        <h3 class="mb-0 fw-bold">88%</h3>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="glass-card p-3 text-center rounded-4 h-100">
-                        <p class="text-secondary small mb-1">Rank</p>
-                        <h3 class="mb-0 fw-bold text-warning">#4</h3>
-                    </div>
-                </div>
+                <button onclick="submitAttendance()" id="submit-attn-btn" class="btn btn-primary w-100 fw-bold py-3 rounded-4">Mark Attendance</button>
             </div>
         </div>
     </section>
@@ -134,78 +94,122 @@
     <section id="lecturer-view" class="view-section">
         <div class="row g-4">
             <div class="col-lg-5">
-                <div class="glass-card h-100">
-                    <h4 class="fw-bold mb-4"><i class="bi bi-broadcast text-primary me-2"></i>Live Session</h4>
-                    <div class="mb-3">
-                        <label class="small text-secondary mb-2">Select Course</label>
-                        <select id="course-selection" class="form-select glass-input">
-                            <option value="CSC401">CSC 401 - Machine Learning</option>
-                            <option value="CSC405">CSC 405 - Web Security</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="small text-secondary mb-2">Session Expiry</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-secondary w-100 rounded-3 small">15m</button>
-                            <button class="btn btn-outline-secondary w-100 rounded-3 small active">30m</button>
-                            <button class="btn btn-outline-secondary w-100 rounded-3 small">1h</button>
-                        </div>
-                    </div>
-                    <button onclick="generateOTP()" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg">Activate Session</button>
+                <div class="glass-card">
+                    <h4 class="fw-bold mb-4">Live Session</h4>
+                    <input type="text" id="course-name" class="form-control glass-input mb-3" placeholder="Course Name (e.g. CSC401)">
+                    <button onclick="startLecturerSession()" id="start-btn" class="btn btn-primary w-100 py-3 rounded-4 fw-bold">Generate Code</button>
                     
                     <div id="otp-area" class="mt-4 text-center d-none">
                         <div class="p-3 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10">
-                            <p class="small text-secondary mb-1">BROADCAST CODE</p>
+                            <p class="small text-secondary mb-1">STUDENT JOIN CODE</p>
                             <div id="generated-otp" class="otp-display my-2">------</div>
-                            <div class="progress bg-dark mb-2" style="height: 4px;">
-                                <div class="progress-bar bg-primary" id="timer-bar" style="width: 100%"></div>
-                            </div>
-                            <p class="text-warning small mb-0"><i class="bi bi-clock"></i> <span id="timer">30:00</span> remaining</p>
+                            <p class="text-warning small"><i class="bi bi-geo-alt"></i> Geofence Active (100m)</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
             <div class="col-lg-7">
                 <div class="glass-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="fw-bold mb-0">Live Attendance</h4>
-                        <span class="badge bg-primary rounded-pill px-3 py-2" id="student-count">0 Students</span>
-                    </div>
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-dark table-hover align-middle border-0">
-                            <thead>
-                                <tr class="text-secondary small border-bottom border-white border-opacity-10">
-                                    <th>NAME</th>
-                                    <th>MATRIC NO</th>
-                                    <th class="text-end">TIME</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attendance-list">
-                                </tbody>
+                    <h4 class="fw-bold mb-4">Attendance List</h4>
+                    <div class="table-responsive">
+                        <table class="table table-dark">
+                            <thead><tr><th>Name</th><th class="text-end">Time</th></tr></thead>
+                            <tbody id="attendance-list"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-    <section id="success-view" class="view-section">
-        <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-            <div class="glass-card text-center" style="max-width: 400px;">
-                <div class="mb-4">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-                </div>
-                <h2 class="fw-bold">Attendance Logged!</h2>
-                <p class="text-secondary">You have successfully marked your presence for this session.</p>
-                <button onclick="switchView('student-view')" class="btn btn-outline-light rounded-4 w-100 py-3 mt-3">Back to Dashboard</button>
-            </div>
-        </div>
-    </section>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/main.js"></script>
+<script>
+    // Supabase Configuration
+    const SB_URL = 'YOUR_SUPABASE_URL';
+    const SB_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    // --- VIEW CONTROLLER ---
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    // --- AUTHENTICATION ---
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if (error) return alert(error.message);
+
+        // Check Role
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+        if (profile.role === 'LECTURER') switchView('lecturer-view');
+        else switchView('student-view');
+    });
+
+    async function logout() {
+        await supabase.auth.signOut();
+        location.reload();
+    }
+
+    // --- LECTURER LOGIC (GEOFENCING) ---
+    async function startLecturerSession() {
+        const course = document.getElementById('course-name').value;
+        if(!course) return alert("Enter course name");
+
+        // Get Lecturer Location
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const otp = Math.floor(100000 + Math.random() * 900000);
+            const { error } = await supabase.from('active_sessions').insert([{
+                course_name: course,
+                otp_code: otp.toString(),
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                is_active: true
+            }]);
+
+            if (!error) {
+                document.getElementById('generated-otp').innerText = otp;
+                document.getElementById('otp-area').classList.remove('d-none');
+            }
+        });
+    }
+
+    // --- STUDENT LOGIC (DISTANCE CALCULATION) ---
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // metres
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function submitAttendance() {
+        const code = document.getElementById('class-code').value;
+        const { data: session } = await supabase.from('active_sessions')
+            .select('*').eq('otp_code', code).eq('is_active', true).single();
+
+        if (!session) return alert("Invalid or expired code");
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, session.lat, session.lng);
+            
+            if (dist > 100) {
+                alert(`Too far! You are ${Math.round(dist)}m away. You must be within 100m.`);
+                return;
+            }
+
+            // Record attendance in Supabase here
+            alert("Success! Presence verified.");
+        });
+    }
+</script>
 </body>
 </html>
