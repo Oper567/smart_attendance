@@ -15,7 +15,6 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         input::placeholder { color: #64748b; }
-        input:-webkit-autofill { -webkit-text-fill-color: white; -webkit-box-shadow: 0 0 0px 1000px #0f172a inset; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6">
@@ -26,7 +25,7 @@
                 <span class="text-3xl font-black text-blue-500">U</span>
             </div>
             <h2 class="text-3xl font-black mb-1">Join Uni<span class="text-blue-500">Smart</span></h2>
-            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Create your secure profile</p>
+            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Identity Verification Required</p>
         </header>
         
         <form id="signupForm" class="space-y-4">
@@ -43,17 +42,23 @@
                 <input type="email" id="email" placeholder="University Email" required class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
                 
                 <div id="studentFields">
-                    <input type="text" id="matricNo" placeholder="Matric Number (e.g. 19/1234)" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                    <div class="relative">
+                        <input type="text" id="matricNo" placeholder="Matric Number (e.g. 19/1234)" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12">
+                        <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                    </div>
                 </div>
 
                 <div id="lecturerFields" class="hidden">
-                    <input type="text" id="staffId" placeholder="Staff ID Number" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
+                    <div class="relative">
+                        <input type="text" id="staffId" placeholder="Staff ID Number" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white pl-12">
+                        <i data-lucide="badge-id" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                    </div>
                 </div>
 
                 <div class="relative">
                     <input type="password" id="password" placeholder="Create Password" required 
                         class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
-                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
                         <i id="toggleIcon1" data-lucide="eye" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -68,13 +73,8 @@
                     <p id="strengthText" class="text-[9px] uppercase font-black text-slate-600 tracking-[0.15em]">Security: Too Weak</p>
                 </div>
 
-                <div class="relative">
-                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all pr-12 text-white">
-                    <button type="button" onclick="togglePassword('confirmPassword', 'toggleIcon2')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-                        <i id="toggleIcon2" data-lucide="eye" class="w-5 h-5"></i>
-                    </button>
-                </div>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required 
+                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-3.5 focus:outline-none focus:border-blue-500 transition-all text-white">
             </div>
             
             <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2">
@@ -92,7 +92,7 @@
             <i data-lucide="mail" class="w-10 h-10 -rotate-12"></i>
         </div>
         <h2 class="text-2xl font-black mb-2">Check your email</h2>
-        <p class="text-slate-400 text-sm mb-8 leading-relaxed">We've sent a verification link. Once confirmed, you can log in to your dashboard.</p>
+        <p class="text-slate-400 text-sm mb-8 leading-relaxed">Identity verification link sent. Once confirmed, your account will be reviewed for approval.</p>
         <button onclick="window.location.href='login.html'" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg">
             Back to Login
         </button>
@@ -100,7 +100,7 @@
 
     <script>
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdndvZ2RvbmhzeG56eWhwY3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDIwOTgsImV4cCI6MjA4MzM3ODA5OH0.LszM2J9xryM6pVdwKb2vK2uArnzeNthAGvxCvHg-VQA';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Use your actual key
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         lucide.createIcons();
@@ -164,22 +164,15 @@
             const matricNo = document.getElementById('matricNo').value.trim();
             const staffId = document.getElementById('staffId').value.trim();
 
-            // Prepare Clean Metadata Object
-            const metadata = {
-                full_name: fullName,
-                role: role,
-                // We send both keys to satisfy the SQL trigger, but only one will have a value
-                matric_no: role === 'STUDENT' ? matricNo : null,
-                staff_id: role === 'LECTURER' ? staffId : null
-            };
-
             const { data, error } = await supabaseClient.auth.signUp({
                 email,
                 password,
                 options: { 
-                    data: metadata,
-                    // Use standard origin for email redirect
-                    emailRedirectTo: window.location.origin + '/login.html'
+                    data: {
+                        full_name: fullName,
+                        role: role,
+                        identity_no: role === 'STUDENT' ? matricNo : staffId
+                    }
                 }
             });
 

@@ -62,10 +62,12 @@
 
                     <div>
                         <label class="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-2.5 ml-1 font-bold">Password</label>
-                        <div class="relative">
+                        <div class="relative flex items-center">
                             <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••"
-                                class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white pr-14 placeholder:text-slate-600" />
-                            <button type="button" onclick="togglePassword()" class="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-center text-slate-500">
+                                class="w-full bg-slate-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-white pr-12 placeholder:text-slate-600" />
+                            
+                            <button type="button" onclick="togglePassword()" 
+                                class="absolute right-3 p-2 text-slate-500 hover:text-blue-400 focus:outline-none z-10 transition-colors">
                                 <i id="toggleIcon" data-lucide="eye" class="w-5 h-5"></i>
                             </button>
                         </div>
@@ -99,45 +101,33 @@
         function togglePassword() {
             const input = document.getElementById("password");
             const icon = document.getElementById("toggleIcon");
-            input.type = input.type === "password" ? "text" : "password";
-            icon.setAttribute("data-lucide", input.type === "password" ? "eye" : "eye-off");
+            const isPassword = input.type === "password";
+            
+            input.type = isPassword ? "text" : "password";
+            // Replace icon using Lucide's attribute update
+            icon.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
             lucide.createIcons();
         }
 
         async function validateAndRoute(user) {
             const errorEl = document.getElementById("errorMessage");
-            console.log("Auth successful. User UID:", user.id);
-
             try {
-                // Fetch Profile
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .single();
 
-                if (profileError) {
-                    console.error("Profile Fetch Error:", profileError);
-                    throw new Error("Login successful, but PROFILE NOT FOUND in database. Ask Admin to add your UID to the profiles table.");
-                }
-
+                if (profileError) throw new Error("Profile not found. Ask Admin to verify your UID.");
                 if (!profile.is_approved) {
                     await supabaseClient.auth.signOut();
                     throw new Error("ACCESS DENIED: Account awaiting admin approval.");
                 }
 
-                // Routing
                 const role = profile.role?.toUpperCase();
-                console.log("User Role identified as:", role);
-
-                if (role === 'LECTURER') {
-                    window.location.href = 'lecturer.html';
-                } else {
-                    window.location.href = 'student.html';
-                }
+                window.location.href = (role === 'LECTURER') ? 'lecturer.html' : 'student.html';
 
             } catch (err) {
-                console.error("Critical Error:", err.message);
                 errorEl.innerText = err.message;
                 errorEl.classList.remove("hidden");
                 resetButton();
