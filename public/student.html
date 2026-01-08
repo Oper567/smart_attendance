@@ -89,16 +89,21 @@
     </main>
 
 <script>
-    // Configuration - Replace 'YOUR_KEY' with your actual Supabase Anon Key
+    // Configuration
     const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
-    const SB_KEY = 'YOUR_KEY'; 
+    const SB_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Ensure you replace this
     
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let currentUser = null;
 
     async function init() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) { window.location.href = 'login.html'; return; }
+        
+        // Safety Redirect: Ensure user is logged in AND is a Student
+        if (!user || user.user_metadata.role !== 'STUDENT') { 
+            window.location.href = 'login.html'; 
+            return; 
+        }
         
         currentUser = user;
         document.getElementById('welcomeName').innerText = `Hello, ${user.user_metadata.full_name || 'Student'}`;
@@ -106,20 +111,16 @@
     }
 
     /**
-     * Haversine formula to calculate distance between two coordinates in meters
+     * Haversine formula to calculate distance between coordinates
      */
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // Earth radius in meters
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     async function submitAttendance() {
@@ -131,6 +132,7 @@
 
         setLoading(true);
 
+        // High Accuracy Geolocation
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
                 // 1. Validate the Session exists and is active
@@ -155,7 +157,7 @@
                     throw new Error(`Out of range. You are ${Math.round(distance)}m away. Move closer to the hall.`);
                 }
 
-                // 3. Log Attendance with session link
+                // 3. Log Attendance
                 const { error: aError } = await supabaseClient.from('attendance_logs').insert([{
                     student_name: currentUser.user_metadata.full_name,
                     matric_no: currentUser.user_metadata.matric_no,
@@ -165,12 +167,11 @@
                 }]);
 
                 if (aError) {
-                    // Handle unique constraint (already marked)
                     if (aError.code === '23505') throw new Error("Attendance already recorded for this class.");
                     throw aError;
                 }
 
-                // Success Handling
+                // Success Feedback
                 showStatus(`Checked in successfully: ${session.course_code}`, "success");
                 btn.innerHTML = "Success!";
                 btn.className = "w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl";
@@ -190,7 +191,7 @@
         }, (geoErr) => {
             showStatus("GPS Access Denied. Ensure Location Services are ON.", "error");
             setLoading(false);
-        }, { enableHighAccuracy: true, timeout: 8000 });
+        }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
     async function loadHistory() {
@@ -243,7 +244,6 @@
         msg.innerText = text;
         msg.classList.remove('hidden', 'status-success', 'status-error');
         msg.classList.add(type === 'success' ? 'status-success' : 'status-error');
-        
         if(type === 'error') setTimeout(() => msg.classList.add('hidden'), 6000);
     }
 

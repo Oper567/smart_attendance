@@ -25,11 +25,11 @@
     <header class="max-w-6xl mx-auto flex justify-between items-center mb-12">
         <div class="flex items-center gap-4 group">
             <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:rotate-6 transition-transform">
-                <span class="font-black text-2xl">U</span>
+                <span class="font-black text-2xl text-white">U</span>
             </div>
             <div>
                 <h1 class="text-2xl font-black tracking-tight">Lecturer<span class="text-blue-500">Hub</span> <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-md ml-2">PRO</span></h1>
-                <p id="lecturerDisplayName" class="text-xs text-slate-400 font-medium">Initialising Secure Environment...</p>
+                <p id="lecturerDisplayName" class="text-xs text-slate-400 font-medium">Authenticating Security Layers...</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -46,43 +46,38 @@
     <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-4 space-y-6">
             <div class="glass-card p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16"></div>
                 <h3 class="text-sm font-black mb-8 flex items-center gap-3 text-slate-400 uppercase tracking-widest">
-                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
-                    Session Config
+                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span> Session Config
                 </h3>
                 
                 <div class="space-y-6">
                     <div class="group">
-                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest group-focus-within:text-blue-500 transition-colors">Course Identifier</label>
-                        <input type="text" id="courseCode" placeholder="Enter Course (e.g. SWE201)" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold uppercase placeholder:opacity-20 text-lg">
+                        <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Course Code</label>
+                        <input type="text" id="courseCode" placeholder="E.G. CSC301" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500/50 transition-all font-bold uppercase text-lg text-white">
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase font-black text-slate-500 mb-2 ml-1 tracking-widest">Broadcast Window</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="duration" class="col-span-2 bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-slate-200 appearance-none font-bold">
-                                <option value="5">05 Minutes</option>
-                                <option value="15" selected>15 Minutes</option>
-                                <option value="30">30 Minutes</option>
-                                <option value="60">60 Minutes</option>
-                            </select>
-                        </div>
+                        <select id="duration" class="w-full bg-slate-900/40 border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-slate-200 font-bold">
+                            <option value="5">05 Minutes</option>
+                            <option value="15" selected>15 Minutes</option>
+                            <option value="60">60 Minutes</option>
+                        </select>
                     </div>
-                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                    <button onclick="startSession()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl transition-all flex items-center justify-center gap-3">
                         <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>ACTIVATE BROADCAST</span>
+                        <span id="btnText">ACTIVATE BROADCAST</span>
                     </button>
                 </div>
             </div>
 
             <div class="glass-card p-6 rounded-3xl flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
                     <div>
-                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Geofence Radius</p>
-                        <p id="geoStatus" class="text-xs font-bold text-slate-300">Awaiting Signal...</p>
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Geofence Status</p>
+                        <p id="geoStatus" class="text-xs font-bold text-slate-300">GPS Standing By...</p>
                     </div>
                 </div>
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
@@ -92,29 +87,24 @@
         <div class="lg:col-span-8 space-y-6">
             <div class="glass-card p-10 rounded-[3rem] text-center relative overflow-hidden">
                 <div id="codeOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl z-20 flex flex-col items-center justify-center transition-all duration-700">
-                    <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    </div>
                     <p class="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Secure Channel Offline</p>
                 </div>
 
                 <div class="relative z-10">
                     <div class="flex justify-between items-center mb-10">
-                        <div class="flex flex-col items-start">
-                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Dynamic OTP</span>
-                            <div class="h-1 w-8 bg-blue-500 rounded-full"></div>
+                        <div class="text-left">
+                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Dynamic OTP</span>
+                            <div class="h-1 w-8 bg-blue-500 rounded-full mt-1"></div>
                         </div>
                         <div class="text-right">
-                            <span id="timer" class="text-3xl font-black font-mono text-white tabular-nums">00:00</span>
-                            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Time Remaining</p>
+                            <span id="timer" class="text-3xl font-black font-mono text-white">00:00</span>
                         </div>
                     </div>
 
                     <h2 id="activeCode" class="text-8xl md:text-9xl font-black code-display my-8 drop-shadow-2xl">000000</h2>
-                    
                     <div class="max-w-md mx-auto">
-                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
-                            <div id="progress" class="bg-gradient-to-r from-blue-600 to-blue-400 h-full w-0 rounded-full transition-all duration-1000"></div>
+                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
+                            <div id="progress" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
                         </div>
                     </div>
                 </div>
@@ -126,17 +116,11 @@
                         <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Live Manifest</h3>
                         <p class="text-[10px] text-slate-600 font-bold" id="sessionTimeInfo">No active session</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="downloadCourseReport()" class="text-[10px] bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-2 rounded-xl border border-white/10 font-black transition-all">
-                            EXPORT DATA
-                        </button>
-                        <div id="studentCount" class="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] font-black shadow-lg shadow-blue-500/20">0 PRESENT</div>
-                    </div>
+                    <div id="studentCount" class="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] font-black shadow-lg">0 PRESENT</div>
                 </div>
 
-                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 content-start">
+                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
                     <div id="emptyMsg" class="col-span-full py-20 flex flex-col items-center opacity-30">
-                        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <p class="text-[10px] uppercase tracking-widest font-black">Waiting for encrypted handshakes...</p>
                     </div>
                 </div>
@@ -145,138 +129,90 @@
     </main>
 
     <script>
-        // Supabase Configuration
         const SB_URL = 'https://olvwogdonhsxnzyhpcpv.supabase.co';
         const SB_KEY = 'YOUR_SUPABASE_ANON_KEY'; 
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        let currentUser = null;
-        let activeCourseCode = null;
-        let countdown = null;
-        let currentSessionId = null;
-        let presentStudents = [];
+        let currentUser = null, activeCourseCode = null, countdown = null, currentSessionId = null, presentStudents = [];
 
-        // 1. Initial Setup
         async function setup() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'login.html'; return; }
-            
             currentUser = user;
             document.getElementById('lecturerDisplayName').innerText = `Certified: ${user.user_metadata.full_name || 'Academic Staff'}`;
-            
-            // Try to recover session on refresh
             checkActiveSession();
         }
 
-        // 2. Session Persistence Logic
         async function checkActiveSession() {
-            const { data } = await supabaseClient
-                .from('active_sessions')
-                .select('*')
-                .eq('is_active', true)
-                .eq('lecturer_name', currentUser.user_metadata.full_name)
-                .maybeSingle();
-
-            if (data) {
-                resumeSession(data);
-            }
+            const { data } = await supabaseClient.from('active_sessions')
+                .select('*').eq('is_active', true).limit(1).maybeSingle();
+            if (data) resumeSession(data);
         }
 
         function resumeSession(session) {
             currentSessionId = session.id;
             activeCourseCode = session.course_code;
-            
             document.getElementById('codeOverlay').classList.add('hidden');
             document.getElementById('activeCode').innerText = session.otp;
-            document.getElementById('geoStatus').innerText = `Locked within 50m of ${session.lat.toFixed(4)}`;
+            document.getElementById('geoStatus').innerText = `Locked within ${session.radius}m`;
             document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-border";
-            document.getElementById('sessionTimeInfo').innerText = `Active Session: ${session.course_code}`;
+            document.getElementById('sessionTimeInfo').innerText = `Course: ${session.course_code}`;
             
             initRealtimeSubscription();
             fetchExistingLogs();
         }
 
-        // 3. Start New Session
-     async function startSession() {
-    // 1. Correctly grab the value from the input field
-    const courseInput = document.getElementById('courseCode'); 
-    
-    // Check if the element actually exists in your HTML
-    if (!courseInput) {
-        console.error("Error: HTML input with id 'courseCode' not found!");
-        return;
-    }
+        async function startSession() {
+            const codeInput = document.getElementById('courseCode');
+            const code = codeInput.value.trim().toUpperCase();
+            if (!code) return alert("Enter Course Code");
 
-    const courseValue = courseInput.value.trim();
+            document.getElementById('btnText').innerText = "LOCKING GPS...";
 
-    // 2. Validate before sending to Supabase
-    if (!courseValue) {
-        alert("You must enter a course code (e.g., SWE201) first.");
-        return;
-    }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                const { data, error } = await supabaseClient.from('active_sessions').insert([{
+                    course_code: code,
+                    otp: otp,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    is_active: true,
+                    radius: 100
+                }]).select().single();
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // 3. The Database Call
-        const { data, error } = await supabaseClient
-            .from('active_sessions')
-            .insert([{
-                course_code: courseValue, // THIS IS THE CRITICAL LINE
-                otp: generatedOtp,
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                is_active: true,
-                radius: 100
-            }]);
-
-        if (error) {
-            console.error("Full Error Object:", error);
-            alert("DB Error: " + error.message);
-        } else {
-            alert("Broadcast Started for " + courseValue);
+                if (error) alert("DB Error: " + error.message);
+                else {
+                    resumeSession(data);
+                    runTimer(parseInt(document.getElementById('duration').value) * 60);
+                }
+            }, (err) => alert("GPS Permission Denied. Cannot start."));
         }
-    });
-}
 
-        // 4. Realtime Manifest Updates
         async function fetchExistingLogs() {
-            const { data } = await supabaseClient
-                .from('attendance_logs')
-                .select('*')
-                .eq('course_code', activeCourseCode)
-                .order('created_at', { ascending: false });
-            
+            const { data } = await supabaseClient.from('attendance_logs')
+                .select('*').eq('course_code', activeCourseCode).order('created_at', { ascending: false });
             if (data) {
                 document.getElementById('studentList').innerHTML = "";
-                data.forEach(log => renderStudentRow(log));
+                presentStudents = [];
+                data.forEach(renderStudentRow);
             }
         }
 
         function initRealtimeSubscription() {
-            supabaseClient.channel('attendance_live')
-                .on('postgres_changes', { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'attendance_logs',
-                    filter: `course_code=eq.${activeCourseCode}`
-                }, (payload) => {
-                    renderStudentRow(payload.new);
-                    playHaptic();
-                }).subscribe();
+            supabaseClient.channel('attendance_live').on('postgres_changes', { 
+                event: 'INSERT', schema: 'public', table: 'attendance_logs', filter: `course_code=eq.${activeCourseCode}`
+            }, (payload) => renderStudentRow(payload.new)).subscribe();
         }
 
         function renderStudentRow(log) {
-            const container = document.getElementById('studentList');
-            const emptyMsg = document.getElementById('emptyMsg');
-            if(emptyMsg) emptyMsg.remove();
-
-            // Prevent duplicates in the UI list
             if (presentStudents.some(s => s.matric_no === log.matric_no)) return;
             presentStudents.push(log);
+            const container = document.getElementById('studentList');
+            const empty = document.getElementById('emptyMsg');
+            if (empty) empty.remove();
 
             const card = `
-                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 animate-[fadeIn_0.5s_ease-out]">
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 animate-[fadeIn_0.5s]">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-black text-xs">
                             ${log.student_name.charAt(0)}
@@ -286,74 +222,29 @@
                             <p class="text-[9px] text-slate-500 font-mono">${log.matric_no}</p>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">VERIFIED</span>
-                        <span class="text-[7px] text-slate-600 mt-1 uppercase">${new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                </div>
-            `;
+                    <span class="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">VERIFIED</span>
+                </div>`;
             container.insertAdjacentHTML('afterbegin', card);
             document.getElementById('studentCount').innerText = `${presentStudents.length} PRESENT`;
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
         }
 
-        // 5. Timer & Export
-        function runTimer(totalSeconds) {
-            if(countdown) clearInterval(countdown);
-            let remaining = totalSeconds;
-            const progress = document.getElementById('progress');
-            const timerText = document.getElementById('timer');
-
+        function runTimer(sec) {
+            const total = sec;
             countdown = setInterval(() => {
-                const mins = Math.floor(remaining / 60);
-                const secs = remaining % 60;
-                timerText.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                progress.style.width = `${(remaining / totalSeconds) * 100}%`;
-
-                if (remaining <= 0) { 
-                    clearInterval(countdown); 
-                    finishSession(); 
-                }
-                remaining--;
+                const m = Math.floor(sec / 60), s = sec % 60;
+                document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                document.getElementById('progress').style.width = `${(sec/total)*100}%`;
+                if (sec-- <= 0) { clearInterval(countdown); endSession(); }
             }, 1000);
         }
 
-        async function finishSession() {
-            await supabaseClient.from('active_sessions')
-                .update({ is_active: false })
-                .eq('id', currentSessionId);
-
-            document.getElementById('codeOverlay').classList.remove('hidden');
-            document.getElementById('codeOverlay').style.opacity = '1';
-            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
-            document.getElementById('activeCode').innerText = "000000";
+        async function endSession() {
+            await supabaseClient.from('active_sessions').update({ is_active: false }).eq('id', currentSessionId);
+            location.reload();
         }
 
-        function downloadCourseReport() {
-            if (presentStudents.length === 0) { alert("No data to export"); return; }
-            
-            let csv = "Name,Matric Number,Course,Timestamp\n";
-            presentStudents.forEach(s => {
-                csv += `${s.student_name},${s.matric_no},${s.course_code},${s.created_at}\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `Attendance_${activeCourseCode}_${new Date().toLocaleDateString()}.csv`);
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        function playHaptic() { if (window.navigator.vibrate) window.navigator.vibrate(10); }
-
-        async function logout() { 
-            await supabaseClient.auth.signOut(); 
-            window.location.href = 'login.html'; 
-        }
-
+        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
         setup();
     </script>
 </body>
